@@ -1,0 +1,31 @@
+{
+  "short_name": "ChosenBlock",
+  "name": "Chosen Block - Premium Block Puzzle",
+  "description": "Um jogo de quebra-cabeça de blocos premium com jogabilidade clássica, modos bomba e tempo desafiadores, efeitos visuais impressionantes e sons imersivos.",
+  "icons": [
+    {
+      "src": "assets/icons/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
+      "src": "assets/icons/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#0b0c10",
+  "theme_color": "#0b0c10",
+  "display": "standalone",
+  "orientation": "portrait",
+  "categories": ["games", "entertainment"]
+}

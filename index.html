@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Chosen Block - Block Puzzle</title>
+  <script>
+    window.addEventListener('error', function(e) {
+      const div = document.createElement('div');
+      div.style.position = 'fixed';
+      div.style.top = '0';
+      div.style.left = '0';
+      div.style.width = '100%';
+      div.style.backgroundColor = '#ef4444';
+      div.style.color = '#ffffff';
+      div.style.padding = '12px';
+      div.style.zIndex = '999999';
+      div.style.fontFamily = 'monospace';
+      div.style.fontSize = '13px';
+      div.style.whiteSpace = 'pre-wrap';
+      div.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+      div.innerHTML = '<strong>[FALHA JS]</strong> ' + e.message + ' em ' + e.filename + ':' + e.lineno + '<br><br>Stack:<br>' + (e.error ? e.error.stack : 'Indisponível');
+      document.body.appendChild(div);
+    });
+  </script>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0d0e15">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg">
+  <link rel="apple-touch-icon" href="assets/icons/icon.svg">
+
+  <!-- SEO Tags -->
+  <meta name="description" content="Um jogo de quebra-cabeça de blocos premium com jogabilidade clássica, modos desafiadores, efeitos visuais impressionantes e sons imersivos. Jogue offline!">
+  <meta name="keywords" content="block puzzle, jogo de blocos, pwa, game, offline game, tetris style, html5 game">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="index.css">
+</head>
+<body class="theme-neon" style="background-color: #0b0c10; color: #f8fafc;">
+  <!-- Efeitos de Partícula de Fundo -->
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- Container Principal -->
+  <div class="app-container">
+    
+    <!-- Tela de Carregamento -->
+    <div id="screen-loader" class="screen active">
+      <div class="loader-content">
+        <h1 class="game-logo">Chosen<span>Block</span></h1>
+        <div class="spinner">
+          <div class="double-bounce1"></div>
+          <div class="double-bounce2"></div>
+        </div>
+        <p class="loader-status">Iniciando o jogo...</p>
+      </div>
+    </div>
+
+    <!-- Tela Principal / Menu -->
+    <div id="screen-menu" class="screen">
+      <header class="menu-header">
+        <h1 class="game-logo animate-logo">Chosen<span>Block</span></h1>
+        <p class="tagline">O quebra-cabeça definitivo</p>
+      </header>
+
+      <main class="menu-main">
+        <div class="game-modes-grid">
+          <button class="btn-mode glass-card" data-mode="classic">
+            <div class="mode-icon">🎮</div>
+            <div class="mode-info">
+              <h3>Clássico</h3>
+              <p>Relaxe e pontue sem pressão de tempo</p>
+            </div>
+          </button>
+          
+          <button class="btn-mode glass-card" data-mode="bomb">
+            <div class="mode-icon">💣</div>
+            <div class="mode-info">
+              <h3>Modo Bomba</h3>
+              <p>Desarme as bombas antes que explodam!</p>
+            </div>
+            <span class="badge">Tenso</span>
+          </button>
+
+          <button class="btn-mode glass-card" data-mode="time">
+            <div class="mode-icon">⏳</div>
+            <div class="mode-info">
+              <h3>Contra o Tempo</h3>
+              <p>Corra contra o relógio fazendo linhas</p>
+            </div>
+            <span class="badge">Rápido</span>
+          </button>
+        </div>
+
+        <div class="menu-actions">
+          <button id="btn-show-scores" class="btn-secondary glass-btn">🏆 Recordes</button>
+          <button id="btn-show-settings" class="btn-secondary glass-btn">⚙️ Ajustes</button>
+        </div>
+      </main>
+
+      <footer class="menu-footer">
+        <p>@iejchosen_7l</p>
+      </footer>
+    </div>
+
+    <!-- Tela de Jogo -->
+    <div id="screen-game" class="screen">
+      <header class="game-header">
+        <div class="header-left">
+          <button id="btn-back-menu" class="btn-icon glass-btn" aria-label="Voltar ao menu">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          </button>
+          <span id="game-mode-title" class="game-mode-tag">Clássico</span>
+        </div>
+        
+        <div class="score-display-group">
+          <div class="score-box glass-card">
+            <span class="score-label">Pontos</span>
+            <span id="current-score" class="score-val">0</span>
+          </div>
+          <div class="score-box glass-card">
+            <span class="score-label">Recorde</span>
+            <span id="best-score" class="score-val">0</span>
+          </div>
+        </div>
+
+        <button id="btn-toggle-sound" class="btn-icon glass-btn" aria-label="Ativar/Desativar som">
+          <span class="sound-icon-on">🔊</span>
+          <span class="sound-icon-off hidden">🔇</span>
+        </button>
+      </header>
+
+      <!-- Barra de progresso para o Modo Tempo -->
+      <div id="time-bar-container" class="glass-card hidden">
+        <div id="time-bar-fill"></div>
+      </div>
+
+      <main class="game-area">
+        <!-- Grade do Jogo -->
+        <div class="board-outer-container glass-card">
+          <div id="game-board" class="board-grid size-8">
+            <!-- As células serão injetadas via JS -->
+          </div>
+        </div>
+
+        <!-- Área de Combos Flutuantes -->
+        <div id="combo-floater-container"></div>
+
+        <!-- Painel de Versículos Bíblicos (Salmos) -->
+        <div class="psalm-container glass-card" id="psalm-display">
+          <p id="psalm-text">"O Senhor é o meu pastor, nada me faltará."</p>
+          <span id="psalm-ref">Salmos 23:1</span>
+        </div>
+
+        <!-- Deck das Peças Disponíveis -->
+        <div class="deck-container glass-card">
+          <div id="deck-slots" class="slots-layout">
+            <div class="deck-slot" id="slot-0" data-slot="0"></div>
+            <div class="deck-slot" id="slot-1" data-slot="1"></div>
+            <div class="deck-slot" id="slot-2" data-slot="2"></div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="game-footer">
+        <button id="btn-game-reset" class="btn-text-icon glass-btn">
+          <span>🔄 Reiniciar</span>
+        </button>
+      </footer>
+    </div>
+
+    <!-- Modal de Configurações -->
+    <div id="modal-settings" class="modal-overlay hidden">
+      <div class="modal-content glass-card animate-popup">
+        <h2>Ajustes</h2>
+        
+        <div class="setting-row">
+          <label for="theme-select">Tema Visual</label>
+          <select id="theme-select" class="glass-select">
+            <option value="theme-neon">Cyber Neon 🌐</option>
+            <option value="theme-forest">Forest Glass 🌿</option>
+            <option value="theme-sunset">Sunset Glow 🌅</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <label for="grid-size-select">Tamanho da Grade</label>
+          <select id="grid-size-select" class="glass-select">
+            <option value="8">8 x 8 (Clássico)</option>
+            <option value="10">10 x 10 (Avançado)</option>
+          </select>
+        </div>
+
+        <div class="setting-row toggle-row">
+          <span>Efeitos de Vibração</span>
+          <label class="switch">
+            <input type="checkbox" id="vib-toggle" checked>
+            <span class="slider round"></span>
+          </label>
+        </div>
+
+        <button id="btn-close-settings" class="btn-primary glass-btn">Concluído</button>
+      </div>
+    </div>
+
+    <!-- Modal de Recordes -->
+    <div id="modal-scores" class="modal-overlay hidden">
+      <div class="modal-content glass-card animate-popup">
+        <h2>Recordes 🏆</h2>
+        
+        <div class="scores-list">
+          <div class="score-item">
+            <span class="mode-name">🎮 Clássico:</span>
+            <strong id="high-classic" class="score-number">0</strong>
+          </div>
+          <div class="score-item">
+            <span class="mode-name">💣 Bomba:</span>
+            <strong id="high-bomb" class="score-number">0</strong>
+          </div>
+          <div class="score-item">
+            <span class="mode-name">⏳ Contra o Tempo:</span>
+            <strong id="high-time" class="score-number">0</strong>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button id="btn-reset-scores" class="btn-danger-outline glass-btn">Limpar Histórico</button>
+          <button id="btn-close-scores" class="btn-primary glass-btn">Fechar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tela / Modal de Game Over -->
+    <div id="modal-gameover" class="modal-overlay hidden">
+      <div class="modal-content glass-card animate-popup text-center">
+        <div class="gameover-banner">FIM DE JOGO</div>
+        <h2 id="gameover-message">Excelente tentativa!</h2>
+        
+        <div class="final-score-container glass-card">
+          <div class="final-stat">
+            <span class="stat-label">Pontuação Final</span>
+            <span id="final-score-val" class="stat-val animate-scale">0</span>
+          </div>
+          <div id="new-record-badge" class="record-badge hidden">🔥 RECORDISTA!</div>
+        </div>
+
+        <!-- Versículo Motivacional de Fim de Jogo -->
+        <div class="gameover-psalm glass-card" id="gameover-psalm-display">
+          <p id="gameover-psalm-text">"Tudo posso naquele que me fortalece."</p>
+          <span id="gameover-psalm-ref">Filipenses 4:13</span>
+        </div>
+
+        <div class="gameover-actions">
+          <button id="btn-gameover-restart" class="btn-primary glass-btn">🔄 Jogar Novamente</button>
+          <button id="btn-gameover-menu" class="btn-secondary glass-btn">🏠 Ir para o Menu</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="audio.js"></script>
+  <script src="game.js"></script>
+  <script src="render.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // Registro do Service Worker para PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service Worker registrado!', reg.scope))
+          .catch(err => console.log('Falha ao registrar Service Worker:', err));
+      });
+    }
+  </script>
+</body>
+</html>
