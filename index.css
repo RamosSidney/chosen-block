@@ -681,9 +681,10 @@ body {
   position: fixed;
   z-index: 1000;
   pointer-events: none;
-  transform: scale(1.05) translateY(-50px) rotate(2deg); /* Desloca ligeiramente acima do dedo */
+  /* transform é controlado via JavaScript para aceleração por hardware 3D */
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
   opacity: 0.95;
+  transition: none !important; /* Desativa transições no arrasto para evitar lags de atraso */
 }
 
 /* Estilo do bloco individual na peça */

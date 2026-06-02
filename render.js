@@ -4,6 +4,9 @@ class ChosenBlockRender {
     this.game = game;
     this.audio = audioManager;
     
+    // Detecta se é dispositivo móvel para otimização de performance
+    this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
     // Elementos DOM
     this.boardEl = document.getElementById('game-board');
     this.deckSlots = [
@@ -59,7 +62,7 @@ class ChosenBlockRender {
   // Partículas de ambiente flutuando ao fundo
   initAmbientParticles() {
     this.ambientParticles = [];
-    const count = 30;
+    const count = this.isMobile ? 12 : 30;
     for (let i = 0; i < count; i++) {
       this.ambientParticles.push({
         x: Math.random() * window.innerWidth,
@@ -178,9 +181,9 @@ class ChosenBlockRender {
       // Calcula dimensões reais para posicionar perfeitamente sob o dedo
       const rect = el.getBoundingClientRect();
       
-      // Se for touch (mobile), aplicamos um offset Y considerável (-65px) 
-      // para o bloco flutuar acima do polegar do jogador, não tampando a visão!
-      const offsetOffsetY = isTouch ? -65 : 0;
+      // Aplicamos um offset Y (-65px no mobile, -50px no desktop) 
+      // para o bloco flutuar acima do dedo/ponteiro do jogador, não tampando a visão!
+      const offsetOffsetY = isTouch ? -65 : -50;
       
       this.dragOffset.x = rect.width / 2;
       this.dragOffset.y = rect.height / 2 - offsetOffsetY;
@@ -241,8 +244,10 @@ class ChosenBlockRender {
   // Move o elemento DOM da peça arrastada
   moveDraggedElement(x, y) {
     if (!this.draggedEl) return;
-    this.draggedEl.style.left = `${x - this.dragOffset.x}px`;
-    this.draggedEl.style.top = `${y - this.dragOffset.y}px`;
+    const tx = x - this.dragOffset.x;
+    const ty = y - this.dragOffset.y;
+    // Usamos translate3d para aceleração de hardware sem layout recalculations
+    this.draggedEl.style.transform = `translate3d(${tx}px, ${ty}px, 0) scale(1.05) rotate(2deg)`;
   }
 
   // Atualiza em tempo real as células sob a peça exibindo a sombra/preview
@@ -389,6 +394,7 @@ class ChosenBlockRender {
       el.classList.add('in-deck');
       el.style.left = '';
       el.style.top = '';
+      el.style.transform = ''; // Limpa o transform inline para o CSS scale(0.65) funcionar
       el.style.gridTemplateRows = `repeat(${this.draggedPiece.shape.length}, 1fr)`;
       el.style.gridTemplateColumns = `repeat(${this.draggedPiece.shape[0].length}, 1fr)`;
     }
@@ -468,8 +474,8 @@ class ChosenBlockRender {
     ];
     const particleColor = colors[(colorIndex - 1) % colors.length];
 
-    // Gera 15 a 20 faíscas por bloco
-    const sparksCount = 15 + Math.floor(Math.random() * 8);
+    // Gera faíscas por bloco (reduzido no celular para alta performance)
+    const sparksCount = this.isMobile ? 6 + Math.floor(Math.random() * 4) : 15 + Math.floor(Math.random() * 8);
     for (let i = 0; i < sparksCount; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 2 + Math.random() * 6;
@@ -481,7 +487,7 @@ class ChosenBlockRender {
         vy: Math.sin(angle) * speed - 1.5, // Adiciona impulso para cima
         size: 2 + Math.random() * 4,
         alpha: 1.0,
-        decay: 0.02 + Math.random() * 0.03,
+        decay: this.isMobile ? 0.035 + Math.random() * 0.03 : 0.02 + Math.random() * 0.03, // Decay um pouco mais rápido no mobile para liberar memória
         gravity: 0.15,
         color: particleColor
       });
@@ -493,7 +499,9 @@ class ChosenBlockRender {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     // 1. Atualiza partículas de ambiente (fundo sonhador)
-    this.ambientParticles.forEach(p => {
+    const lengthAmbient = this.ambientParticles.length;
+    for (let i = 0; i < lengthAmbient; i++) {
+      const p = this.ambientParticles[i];
       p.x += p.vx;
       p.y += p.vy;
 
@@ -506,14 +514,12 @@ class ChosenBlockRender {
         p.vx *= -1;
       }
 
-      this.ctx.save();
       this.ctx.globalAlpha = p.alpha;
       this.ctx.fillStyle = p.color;
       this.ctx.beginPath();
       this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       this.ctx.fill();
-      this.ctx.restore();
-    });
+    }
 
     // 2. Atualiza e desenha partículas de explosão (faíscas neon)
     for (let i = this.particles.length - 1; i >= 0; i--) {
@@ -530,23 +536,31 @@ class ChosenBlockRender {
         continue;
       }
 
-      this.ctx.save();
-      this.ctx.globalAlpha = p.alpha;
-      this.ctx.fillStyle = p.color;
-      this.ctx.shadowBlur = 10;
-      this.ctx.shadowColor = p.color; // Efeito neon incrível nas faíscas
-      
-      this.ctx.beginPath();
-      // Desenha com rastro ligeiramente esticado dependendo da velocidade
-      const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-      if (speed > 2) {
+      // No mobile, evitamos desenhar o brilho extra para manter 60 FPS estáveis
+      if (this.isMobile) {
+        this.ctx.globalAlpha = p.alpha;
+        this.ctx.fillStyle = p.color;
+        this.ctx.beginPath();
         this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        this.ctx.fill();
       } else {
+        // No desktop, simulamos um brilho neon desenhando um círculo maior com opacidade reduzida
+        // Isso é MUITO mais rápido que usar shadowBlur do canvas!
+        this.ctx.globalAlpha = p.alpha * 0.25;
+        this.ctx.fillStyle = p.color;
+        this.ctx.beginPath();
+        this.ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        this.ctx.globalAlpha = p.alpha;
+        this.ctx.beginPath();
         this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        this.ctx.fill();
       }
-      this.ctx.fill();
-      this.ctx.restore();
     }
+
+    // Reseta globalAlpha para o padrão
+    this.ctx.globalAlpha = 1.0;
 
     // Próximo frame
     requestAnimationFrame(() => this.animateParticles());
