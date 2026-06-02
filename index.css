@@ -1204,3 +1204,15 @@ input:checked + .slider:before {
     font-size: 0.52rem;
   }
 }
+
+.version-tag {
+  font-size: 0.72rem;
+  opacity: 0.5;
+  margin-left: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  display: inline-block;
+  vertical-align: middle;
+}
