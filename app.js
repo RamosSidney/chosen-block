@@ -191,6 +191,9 @@ const initApp = () => {
     // Interrompe loops de tempo anteriores
     stopTimer();
 
+    // Toca o som de início (garante desbloqueio do áudio no iOS e feedback ao iniciar)
+    audio.playGameStart();
+
     // Inicializa a física do jogo
     game.start(mode, currentGridSize);
     
