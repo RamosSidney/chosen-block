@@ -253,7 +253,7 @@
           <button id="btn-quiz-back" class="btn-icon glass-btn" aria-label="Abandonar desafio">
             <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
           </button>
-          <span id="quiz-level-tag" class="game-mode-tag">Fácil</span>
+          <span id="quiz-level-tag" style="display: none;"></span>
         </div>
         
         <div class="score-display-group" style="max-width: 200px; display: flex; gap: 0.35rem;">
@@ -311,7 +311,7 @@
         </div>
 
         <!-- Painel de Ajudas (Pular, 50/50, Voto da Maioria) -->
-        <div class="quiz-helps-container">
+        <div class="quiz-helps-container" id="quiz-helps-panel">
           <button class="btn-help glass-btn" id="btn-help-skip">
             <span class="help-emoji">⏭️</span>
             <span class="help-name">Pular</span>

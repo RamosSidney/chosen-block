@@ -531,6 +531,9 @@ const initApp = () => {
       quizAutoAdvanceTimeout = null;
     }
 
+    // Exibe o painel de ajudas
+    document.getElementById('quiz-helps-panel').classList.remove('hidden');
+
     const q = quiz.getCurrentQuestion();
     if (!q) return;
 
@@ -573,6 +576,9 @@ const initApp = () => {
 
   function handleOptionSelection(selectedIdx) {
     if (quiz.answered) return;
+
+    // Esconde o painel de ajudas para que o painel de feedback suba sobrepondo o seu espaço
+    document.getElementById('quiz-helps-panel').classList.add('hidden');
 
     const result = quiz.selectOption(selectedIdx);
     if (!result) return;
