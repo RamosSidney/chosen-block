@@ -1627,3 +1627,11 @@ input:checked + .slider:before {
   margin-left: auto;
   margin-right: 8px;
 }
+
+/* Ativa rolagem vertical nas telas do Quiz para evitar corte de conteúdo/botões no iOS/iPhone */
+#screen-quiz, 
+#screen-quiz-setup, 
+#screen-quiz-results {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
