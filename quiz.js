@@ -593,7 +593,7 @@ const COIN_REWARDS = {
 
 class BibleQuizGame {
   constructor() {
-    this.level = 'facil'; // 'facil', 'medio', 'dificil'
+    this.level = 'facil'; // 'facil', 'medio', 'dificil', 'misto'
     this.questions = [];  // Array de 20 perguntas selecionadas
     this.currentIndex = 0;
     this.score = 0;
@@ -606,7 +606,8 @@ class BibleQuizGame {
     this.bestScores = {
       facil: 0,
       medio: 0,
-      dificil: 0
+      dificil: 0,
+      misto: 0
     };
     this.loadBestScores();
   }
@@ -623,7 +624,16 @@ class BibleQuizGame {
     this.fiftyFiftyUsed = false;
     this.majorityUsed = false;
 
-    const pool = BIBLE_QUIZ_QUESTIONS[level] || [];
+    let pool = [];
+    if (level === 'misto') {
+      const facilPool = BIBLE_QUIZ_QUESTIONS.facil.map(q => ({ ...q, difficulty: 'facil' }));
+      const medioPool = BIBLE_QUIZ_QUESTIONS.medio.map(q => ({ ...q, difficulty: 'medio' }));
+      const dificilPool = BIBLE_QUIZ_QUESTIONS.dificil.map(q => ({ ...q, difficulty: 'dificil' }));
+      pool = [...facilPool, ...medioPool, ...dificilPool];
+    } else {
+      pool = (BIBLE_QUIZ_QUESTIONS[level] || []).map(q => ({ ...q, difficulty: level }));
+    }
+
     // Clona e embaralha as perguntas da reserva
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
     // Seleciona as primeiras 20 perguntas do pool embaralhado
@@ -652,7 +662,8 @@ class BibleQuizGame {
     
     if (isCorrect) {
       this.score++;
-      rewardGained = COIN_REWARDS[this.level] || 25;
+      const qDifficulty = currentQuestion.difficulty || this.level;
+      rewardGained = COIN_REWARDS[qDifficulty] || 25;
       this.coins += rewardGained;
     } else {
       this.lives--;
@@ -753,7 +764,8 @@ class BibleQuizGame {
         this.bestScores = {
           facil: parsed.facil || 0,
           medio: parsed.medio || 0,
-          dificil: parsed.dificil || 0
+          dificil: parsed.dificil || 0,
+          misto: parsed.misto || 0
         };
       } catch (e) {
         console.error("Erro ao ler recordes do quiz:", e);

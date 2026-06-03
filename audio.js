@@ -10,8 +10,62 @@ const AudioManager = {
     try {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
       this.muted = localStorage.getItem('chosen_block_muted') === 'true';
+      this.setupUnlock();
     } catch (e) {
       console.warn("Web Audio API não é suportada neste navegador.", e);
+    }
+  },
+
+  setupUnlock() {
+    if (!this.ctx) return;
+    
+    const unlock = () => {
+      if (this.ctx && this.ctx.state === 'suspended') {
+        const resumePromise = this.ctx.resume();
+        if (resumePromise && typeof resumePromise.then === 'function') {
+          resumePromise.then(() => {
+            this.playSilentSound();
+            removeListeners();
+          }).catch(err => {
+            console.warn("Erro ao retomar o AudioContext no iOS:", err);
+          });
+        } else {
+          this.playSilentSound();
+          removeListeners();
+        }
+      } else {
+        this.playSilentSound();
+        removeListeners();
+      }
+    };
+    
+    const events = ['touchstart', 'touchend', 'mousedown', 'click'];
+    const removeListeners = () => {
+      events.forEach(evt => {
+        window.removeEventListener(evt, unlock, { capture: true });
+      });
+    };
+    
+    events.forEach(evt => {
+      window.addEventListener(evt, unlock, { passive: true, capture: true });
+    });
+  },
+
+  playSilentSound() {
+    try {
+      if (!this.ctx) return;
+      const buffer = this.ctx.createBuffer(1, 1, 22050);
+      const source = this.ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(this.ctx.destination);
+      if (source.start) {
+        source.start(0);
+      } else if (source.noteOn) {
+        source.noteOn(0);
+      }
+      console.log("AudioContext desbloqueado com sucesso!");
+    } catch (e) {
+      console.warn("Erro ao reproduzir som silencioso para desbloqueio:", e);
     }
   },
 
@@ -329,7 +383,7 @@ const AudioManager = {
 
     let beat = 0;
     const playBeat = () => {
-      if (this.muted || !this.ctx || this.ctx.state === 'suspended') return;
+      if (this.muted || !this.ctx) return;
       const now = this.ctx.currentTime;
       
       // Batida 1: Baixo super grave (coração)

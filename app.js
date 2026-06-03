@@ -362,6 +362,7 @@ const initApp = () => {
     document.getElementById('high-quiz-facil').textContent = `${quiz.bestScores.facil || 0} / 20`;
     document.getElementById('high-quiz-medio').textContent = `${quiz.bestScores.medio || 0} / 20`;
     document.getElementById('high-quiz-dificil').textContent = `${quiz.bestScores.dificil || 0} / 20`;
+    document.getElementById('high-quiz-misto').textContent = `${quiz.bestScores.misto || 0} / 20`;
     
     openModal(modalScores);
   });
@@ -374,7 +375,7 @@ const initApp = () => {
   document.getElementById('btn-reset-scores').addEventListener('click', () => {
     if (confirm('Deseja realmente apagar todo o seu histórico de recordes (incluindo o Desafio Bíblico)?')) {
       game.resetHighScores();
-      quiz.bestScores = { facil: 0, medio: 0, dificil: 0 };
+      quiz.bestScores = { facil: 0, medio: 0, dificil: 0, misto: 0 };
       quiz.saveBestScores();
       
       highClassicEl.textContent = 0;
@@ -384,6 +385,7 @@ const initApp = () => {
       document.getElementById('high-quiz-facil').textContent = "0 / 20";
       document.getElementById('high-quiz-medio').textContent = "0 / 20";
       document.getElementById('high-quiz-dificil').textContent = "0 / 20";
+      document.getElementById('high-quiz-misto').textContent = "0 / 20";
       
       updateScoresUI();
     }
@@ -439,6 +441,10 @@ const initApp = () => {
     btn.addEventListener('click', () => {
       audio.toggleMute();
       updateSoundUI();
+      // Se desmutou e está na tela do quiz, inicia a trilha sonora
+      if (!audio.muted && quizScreen && !quizScreen.classList.contains('hidden')) {
+        audio.playQuizMusic();
+      }
     });
   });
 
@@ -465,7 +471,8 @@ const initApp = () => {
     const levelLabels = {
       facil: 'Fácil 🌱',
       medio: 'Médio 🔥',
-      dificil: 'Difícil 👑'
+      dificil: 'Difícil 👑',
+      misto: 'Misto 🌀'
     };
     document.getElementById('quiz-level-tag').textContent = levelLabels[level] || 'Fácil';
     
@@ -645,7 +652,8 @@ const initApp = () => {
     const levelName = {
       facil: 'Fácil',
       medio: 'Médio',
-      dificil: 'Difícil'
+      dificil: 'Difícil',
+      misto: 'Misto'
     }[quiz.level];
 
     document.getElementById('quiz-results-level-label').textContent = `Nível ${levelName}`;
