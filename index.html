@@ -96,6 +96,15 @@
             </div>
             <span class="badge">Rápido</span>
           </button>
+
+          <button class="btn-mode glass-card" data-mode="quiz">
+            <div class="mode-icon">📖</div>
+            <div class="mode-info">
+              <h3>Desafio Bíblico</h3>
+              <p>Teste seus conhecimentos com 20 perguntas!</p>
+            </div>
+            <span class="badge" style="background: linear-gradient(135deg, #a855f7, #ec4899); box-shadow: 0 3px 8px rgba(168, 85, 247, 0.4);">Novo</span>
+          </button>
         </div>
 
         <div class="menu-actions">
@@ -105,7 +114,7 @@
       </main>
 
       <footer class="menu-footer">
-        <p>@iejchosen_7l <span class="version-tag">v1.0.2</span></p>
+        <p>@iejchosen_7l</p>
       </footer>
     </div>
 
@@ -172,6 +181,156 @@
         <button id="btn-game-reset" class="btn-text-icon glass-btn">
           <span>🔄 Reiniciar</span>
         </button>
+      </footer>
+    </div>
+
+    <!-- Tela de Configuração do Quiz (Níveis) -->
+    <div id="screen-quiz-setup" class="screen">
+      <header class="game-header">
+        <div class="header-left">
+          <button id="btn-quiz-setup-back" class="btn-icon glass-btn" aria-label="Voltar ao menu">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          </button>
+          <span class="game-mode-tag" style="color: #a855f7; border-color: rgba(168, 85, 247, 0.25);">Desafio Bíblico</span>
+        </div>
+      </header>
+
+      <main class="menu-main" style="justify-content: center; flex-grow: 1;">
+        <div style="text-align: center; margin-bottom: 1rem;">
+          <h2 style="font-family: var(--font-logo); font-size: 1.8rem; margin-bottom: 0.25rem;">Escolha a Dificuldade</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Responda a 20 perguntas do nível selecionado</p>
+        </div>
+
+        <div class="game-modes-grid">
+          <button class="btn-quiz-level glass-card level-easy" data-level="facil">
+            <div class="level-icon">🌱</div>
+            <div class="level-info">
+              <h3>Fácil</h3>
+              <p>Perguntas simples e histórias populares</p>
+            </div>
+          </button>
+
+          <button class="btn-quiz-level glass-card level-medium" data-level="medio">
+            <div class="level-icon">🔥</div>
+            <div class="level-info">
+              <h3>Médio</h3>
+              <p>Desafios sobre profetas, reis e milagres</p>
+            </div>
+          </button>
+
+          <button class="btn-quiz-level glass-card level-hard" data-level="dificil">
+            <div class="level-icon">👑</div>
+            <div class="level-info">
+              <h3>Difícil</h3>
+              <p>Detalhes minuciosos e teologia profunda</p>
+            </div>
+          </button>
+        </div>
+      </main>
+
+      <footer class="menu-footer">
+        <p>@iejchosen_7l</p>
+      </footer>
+    </div>
+
+    <!-- Tela do Quiz em Andamento -->
+    <div id="screen-quiz" class="screen">
+      <header class="game-header">
+        <div class="header-left">
+          <button id="btn-quiz-back" class="btn-icon glass-btn" aria-label="Abandonar desafio">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          </button>
+          <span id="quiz-level-tag" class="game-mode-tag">Fácil</span>
+        </div>
+        
+        <div class="score-display-group" style="max-width: 140px;">
+          <div class="score-box glass-card">
+            <span class="score-label">Acertos</span>
+            <span id="quiz-score" class="score-val">0 / 20</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Barra de progresso do Quiz -->
+      <div class="quiz-progress-container glass-card">
+        <div id="quiz-progress-bar"></div>
+        <span id="quiz-progress-text">Pergunta 1 de 20</span>
+      </div>
+
+      <main class="game-area" style="justify-content: flex-start; gap: 0.75rem;">
+        <!-- Card da Pergunta -->
+        <div class="question-card glass-card">
+          <p id="quiz-question-text">Pergunta...</p>
+        </div>
+
+        <!-- Opções de Resposta -->
+        <div class="quiz-options-grid">
+          <button class="btn-option glass-card" data-idx="0">
+            <span class="option-letter">A</span>
+            <span class="option-text" id="opt-0">Opção A</span>
+          </button>
+          <button class="btn-option glass-card" data-idx="1">
+            <span class="option-letter">B</span>
+            <span class="option-text" id="opt-1">Opção B</span>
+          </button>
+          <button class="btn-option glass-card" data-idx="2">
+            <span class="option-letter">C</span>
+            <span class="option-text" id="opt-2">Opção C</span>
+          </button>
+          <button class="btn-option glass-card" data-idx="3">
+            <span class="option-letter">D</span>
+            <span class="option-text" id="opt-3">Opção D</span>
+          </button>
+        </div>
+
+        <!-- Painel de Feedback e Explicação Bíblica -->
+        <div id="quiz-feedback-panel" class="glass-card hidden">
+          <div class="feedback-header">
+            <span id="feedback-title">Correto!</span>
+          </div>
+          <p id="feedback-explanation">Explicação...</p>
+          <button id="btn-quiz-next" class="btn-primary glass-btn" style="margin-top: 0.5rem; width: auto; align-self: flex-end; padding: 8px 24px; font-size: 0.95rem;">Avançar ➡️</button>
+        </div>
+      </main>
+
+      <footer class="game-footer" style="margin-top: 0;">
+        <p style="font-size: 0.8rem; color: var(--text-muted);">Medite na Palavra</p>
+      </footer>
+    </div>
+
+    <!-- Tela de Resultados do Quiz -->
+    <div id="screen-quiz-results" class="screen">
+      <header class="menu-header">
+        <h1 class="game-logo" style="font-size: 2.8rem;">Resultado<span>Quiz</span></h1>
+      </header>
+
+      <main class="menu-main" style="justify-content: center; flex-grow: 1; text-align: center; gap: 1.5rem;">
+        <div class="results-card glass-card" style="padding: 2rem; display: flex; flex-direction: column; gap: 1.25rem; align-items: center;">
+          <h2 id="quiz-results-title" style="font-size: 1.5rem; text-shadow: 0 0 10px var(--primary-glow);">Muito bem! 🌟</h2>
+          
+          <div class="final-score-container glass-card" style="padding: 1rem 2rem; width: 100%; max-width: 240px; margin: 0 auto;">
+            <div class="final-stat">
+              <span class="stat-label" id="quiz-results-level-label">Nível Fácil</span>
+              <span id="quiz-results-score" class="stat-val animate-scale" style="font-size: 2.5rem; display: block;">15 / 20</span>
+            </div>
+            <div id="quiz-new-record-badge" class="record-badge hidden" style="margin-top: 0.5rem;">🔥 NOVO RECORDE!</div>
+          </div>
+
+          <div class="score-item" style="border: none; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 10px 15px; width: 100%; display: flex; justify-content: space-between; align-items: center;">
+            <span class="mode-name">Recorde Pessoal:</span>
+            <strong id="quiz-best-score" class="score-number" style="color: var(--primary); font-size: 1.15rem; font-weight: 800;">18 / 20</strong>
+          </div>
+        </div>
+
+        <div class="menu-actions" style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <button id="btn-quiz-retry" class="btn-primary glass-btn">🔄 Jogar Novamente</button>
+          <button id="btn-quiz-change-level" class="btn-secondary glass-btn">🎯 Escolher Outro Nível</button>
+          <button id="btn-quiz-to-menu" class="btn-secondary glass-btn">🏠 Ir para o Menu</button>
+        </div>
+      </main>
+
+      <footer class="menu-footer">
+        <p>@iejchosen_7l</p>
       </footer>
     </div>
 
@@ -269,6 +428,7 @@
   <script src="audio.js"></script>
   <script src="game.js"></script>
   <script src="render.js"></script>
+  <script src="quiz.js"></script>
   <script src="app.js"></script>
   <script>
     // Registro do Service Worker para PWA

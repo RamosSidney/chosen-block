@@ -3,6 +3,7 @@ const initApp = () => {
   console.log("Chosen Block: initApp() disparado com sucesso!");
   // Inicialização das Instâncias Principais
   const game = new ChosenBlockGame();
+  const quiz = new BibleQuizGame();
   const audio = AudioManager;
   const renderer = new ChosenBlockRender(game, audio);
 
@@ -15,6 +16,9 @@ const initApp = () => {
   const loaderScreen = document.getElementById('screen-loader');
   const menuScreen = document.getElementById('screen-menu');
   const gameScreen = document.getElementById('screen-game');
+  const quizSetupScreen = document.getElementById('screen-quiz-setup');
+  const quizScreen = document.getElementById('screen-quiz');
+  const quizResultsScreen = document.getElementById('screen-quiz-results');
   
   const modalSettings = document.getElementById('modal-settings');
   const modalScores = document.getElementById('modal-scores');
@@ -191,9 +195,6 @@ const initApp = () => {
     // Interrompe loops de tempo anteriores
     stopTimer();
 
-    // Toca o som de início (garante desbloqueio do áudio no iOS e feedback ao iniciar)
-    audio.playGameStart();
-
     // Inicializa a física do jogo
     game.start(mode, currentGridSize);
     
@@ -340,7 +341,12 @@ const initApp = () => {
   document.querySelectorAll('.btn-mode').forEach(btn => {
     btn.addEventListener('click', () => {
       const mode = btn.dataset.mode;
-      startNewGame(mode);
+      if (mode === 'quiz') {
+        transitionScreen(menuScreen, quizSetupScreen);
+        audio.playGameStart();
+      } else {
+        startNewGame(mode);
+      }
     });
   });
 
@@ -426,6 +432,197 @@ const initApp = () => {
   document.getElementById('btn-gameover-menu').addEventListener('click', () => {
     closeModal(modalGameOver);
     transitionScreen(gameScreen, menuScreen);
+  });
+
+  /* ==========================================
+     GERENCIAMENTO DE LÓGICA E EVENTOS DO QUIZ
+     ========================================== */
+
+  function startQuiz(level) {
+    quiz.start(level);
+    
+    // Configura tags visuais
+    const levelLabels = {
+      facil: 'Fácil 🌱',
+      medio: 'Médio 🔥',
+      dificil: 'Difícil 👑'
+    };
+    document.getElementById('quiz-level-tag').textContent = levelLabels[level] || 'Fácil';
+    
+    // Renderiza primeira pergunta
+    renderQuizQuestion();
+    
+    // Transição para tela de jogo do quiz
+    transitionScreen(quizSetupScreen, quizScreen);
+  }
+
+  function renderQuizQuestion() {
+    const q = quiz.getCurrentQuestion();
+    if (!q) return;
+
+    // Atualiza texto da pergunta
+    document.getElementById('quiz-question-text').textContent = q.question;
+    
+    // Atualiza opções
+    const optionButtons = document.querySelectorAll('.btn-option');
+    optionButtons.forEach((btn, idx) => {
+      btn.className = 'btn-option glass-card'; // Reseta classes
+      btn.querySelector('.option-text').textContent = q.options[idx];
+      btn.dataset.idx = idx;
+    });
+
+    // Atualiza barra de progresso
+    const currentQNum = quiz.currentIndex + 1;
+    const progressPct = (currentQNum / 20) * 100;
+    document.getElementById('quiz-progress-bar').style.width = `${progressPct}%`;
+    document.getElementById('quiz-progress-text').textContent = `Pergunta ${currentQNum} de 20`;
+
+    // Atualiza acertos
+    document.getElementById('quiz-score').textContent = `${quiz.score} / ${quiz.currentIndex}`;
+
+    // Esconde o painel de feedback
+    const feedbackPanel = document.getElementById('quiz-feedback-panel');
+    feedbackPanel.classList.add('hidden');
+    feedbackPanel.className = 'glass-card';
+  }
+
+  function handleOptionSelection(selectedIdx) {
+    if (quiz.answered) return;
+
+    const result = quiz.selectOption(selectedIdx);
+    if (!result) return;
+
+    // Toca som apropriado
+    if (result.isCorrect) {
+      audio.playQuizCorrect();
+    } else {
+      audio.playQuizIncorrect();
+    }
+
+    // Atualiza display de acertos
+    document.getElementById('quiz-score').textContent = `${quiz.score} / ${quiz.currentIndex + 1}`;
+
+    // Destaca as opções
+    const optionButtons = document.querySelectorAll('.btn-option');
+    optionButtons.forEach((btn, idx) => {
+      btn.classList.add('disabled');
+      if (idx === result.correctIndex) {
+        btn.classList.add('correct');
+      } else if (idx === selectedIdx) {
+        btn.classList.add('incorrect');
+      }
+    });
+
+    // Mostra o painel de feedback com a explicação
+    const feedbackPanel = document.getElementById('quiz-feedback-panel');
+    const feedbackTitle = document.getElementById('feedback-title');
+    const feedbackExplanation = document.getElementById('feedback-explanation');
+
+    if (result.isCorrect) {
+      feedbackPanel.className = 'glass-card correct-feedback';
+      feedbackTitle.textContent = 'Resposta Correta! ✨';
+    } else {
+      feedbackPanel.className = 'glass-card incorrect-feedback';
+      feedbackTitle.textContent = 'Resposta Incorreta ❌';
+    }
+
+    feedbackExplanation.textContent = quiz.getCurrentQuestion().explanation;
+    feedbackPanel.classList.remove('hidden');
+  }
+
+  function handleQuizNext() {
+    const hasNext = quiz.nextQuestion();
+    if (hasNext) {
+      renderQuizQuestion();
+    } else {
+      showQuizResults();
+    }
+  }
+
+  function showQuizResults() {
+    const levelName = {
+      facil: 'Fácil',
+      medio: 'Médio',
+      dificil: 'Difícil'
+    }[quiz.level];
+
+    document.getElementById('quiz-results-level-label').textContent = `Nível ${levelName}`;
+    document.getElementById('quiz-results-score').textContent = `${quiz.score} / 20`;
+
+    // Mensagens de desempenho personalizadas
+    const titles = {
+      excellent: ["Excepcional! 👑", "Um verdadeiro mestre das Escrituras!"],
+      good: ["Muito bem! 🌟", "Excelente conhecimento da Palavra!"],
+      average: ["Bom trabalho! 🙏", "Continue estudando e meditando!"],
+      poor: ["Tente novamente! 📖", "Uma ótima oportunidade para ler mais a Bíblia!"]
+    };
+
+    let performanceKey = 'poor';
+    if (quiz.score >= 18) performanceKey = 'excellent';
+    else if (quiz.score >= 13) performanceKey = 'good';
+    else if (quiz.score >= 7) performanceKey = 'average';
+
+    const titleInfo = titles[performanceKey];
+    document.getElementById('quiz-results-title').innerHTML = `${titleInfo[0]}<br><span style="font-size: 0.9rem; font-weight: normal; color: var(--text-muted);">${titleInfo[1]}</span>`;
+
+    // Carrega recorde anterior
+    const prevBest = quiz.bestScores[quiz.level] || 0;
+    
+    // Salva pontuação (e verifica se foi novo recorde)
+    const isNewRecord = quiz.updateBestScores();
+    const newRecordBadge = document.getElementById('quiz-new-record-badge');
+    
+    if (isNewRecord && quiz.score > prevBest) {
+      newRecordBadge.classList.remove('hidden');
+    } else {
+      newRecordBadge.classList.add('hidden');
+    }
+
+    document.getElementById('quiz-best-score').textContent = `${Math.max(prevBest, quiz.score)} / 20`;
+
+    // Transição de tela
+    transitionScreen(quizScreen, quizResultsScreen);
+  }
+
+  // Event Listeners das Telas de Quiz
+  document.getElementById('btn-quiz-setup-back').addEventListener('click', () => {
+    transitionScreen(quizSetupScreen, menuScreen);
+  });
+
+  document.querySelectorAll('.btn-quiz-level').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const level = btn.dataset.level;
+      startQuiz(level);
+    });
+  });
+
+  document.getElementById('btn-quiz-back').addEventListener('click', () => {
+    if (confirm('Tem certeza que deseja sair do desafio bíblico atual? Seu progresso será perdido.')) {
+      transitionScreen(quizScreen, quizSetupScreen);
+    }
+  });
+
+  document.querySelectorAll('.btn-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      handleOptionSelection(idx);
+    });
+  });
+
+  document.getElementById('btn-quiz-next').addEventListener('click', () => {
+    handleQuizNext();
+  });
+
+  document.getElementById('btn-quiz-retry').addEventListener('click', () => {
+    startQuiz(quiz.level);
+  });
+
+  document.getElementById('btn-quiz-change-level').addEventListener('click', () => {
+    transitionScreen(quizResultsScreen, quizSetupScreen);
+  });
+
+  document.getElementById('btn-quiz-to-menu').addEventListener('click', () => {
+    transitionScreen(quizResultsScreen, menuScreen);
   });
 };
 

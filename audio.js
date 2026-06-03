@@ -8,62 +8,8 @@ const AudioManager = {
     try {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
       this.muted = localStorage.getItem('chosen_block_muted') === 'true';
-      this.setupUnlock();
     } catch (e) {
       console.warn("Web Audio API não é suportada neste navegador.", e);
-    }
-  },
-
-  setupUnlock() {
-    if (!this.ctx) return;
-    
-    const unlock = () => {
-      if (this.ctx && this.ctx.state === 'suspended') {
-        const resumePromise = this.ctx.resume();
-        if (resumePromise && typeof resumePromise.then === 'function') {
-          resumePromise.then(() => {
-            this.playSilentSound();
-            removeListeners();
-          }).catch(err => {
-            console.warn("Erro ao retomar o AudioContext no iOS:", err);
-          });
-        } else {
-          this.playSilentSound();
-          removeListeners();
-        }
-      } else {
-        this.playSilentSound();
-        removeListeners();
-      }
-    };
-    
-    const events = ['touchstart', 'touchend', 'mousedown', 'click'];
-    const removeListeners = () => {
-      events.forEach(evt => {
-        window.removeEventListener(evt, unlock, { capture: true });
-      });
-    };
-    
-    events.forEach(evt => {
-      window.addEventListener(evt, unlock, { passive: true, capture: true });
-    });
-  },
-
-  playSilentSound() {
-    try {
-      if (!this.ctx) return;
-      const buffer = this.ctx.createBuffer(1, 1, 22050);
-      const source = this.ctx.createBufferSource();
-      source.buffer = buffer;
-      source.connect(this.ctx.destination);
-      if (source.start) {
-        source.start(0);
-      } else if (source.noteOn) {
-        source.noteOn(0);
-      }
-      console.log("AudioContext desbloqueado com sucesso!");
-    } catch (e) {
-      console.warn("Erro ao reproduzir som silencioso para desbloqueio:", e);
     }
   },
 
@@ -320,5 +266,53 @@ const AudioManager = {
     
     subOsc.start(now);
     subOsc.stop(now + 0.9);
+  },
+
+  // Efeito 7: Acerto no Quiz Bíblico (Arpejo alegre curto)
+  playQuizCorrect() {
+    this.resume();
+    if (this.muted || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    const notes = [329.63, 392.00, 523.25]; // E4, G4, C5
+    notes.forEach((freq, idx) => {
+      const time = now + (idx * 0.08);
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, time);
+      gain.gain.setValueAtTime(0, time);
+      gain.gain.linearRampToValueAtTime(0.15, time + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.25);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(time);
+      osc.stop(time + 0.3);
+    });
+  },
+
+  // Efeito 8: Erro no Quiz Bíblico (Som curto decrescente abafado)
+  playQuizIncorrect() {
+    this.resume();
+    if (this.muted || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    const notes = [185.00, 155.56]; // F#3, D#3
+    notes.forEach((freq, idx) => {
+      const time = now + (idx * 0.12);
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, time);
+      gain.gain.setValueAtTime(0, time);
+      gain.gain.linearRampToValueAtTime(0.12, time + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(300, time);
+      osc.connect(gain);
+      gain.connect(filter);
+      filter.connect(this.ctx.destination);
+      osc.start(time);
+      osc.stop(time + 0.4);
+    });
   }
 };

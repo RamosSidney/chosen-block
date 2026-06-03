@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chosen-block-v1.0.2';
+const CACHE_NAME = 'chosen-block-v8';
 const ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const ASSETS = [
   './game.js',
   './render.js',
   './audio.js',
+  './quiz.js',
   './manifest.json',
   './assets/icons/icon.svg'
 ];
