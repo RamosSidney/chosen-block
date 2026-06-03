@@ -656,8 +656,25 @@ const initApp = () => {
       misto: 'Misto'
     }[quiz.level];
 
-    document.getElementById('quiz-results-level-label').textContent = `Nível ${levelName}`;
+    const answersPoints = quiz.score * 10;
+    const heartsPoints = Math.max(0, quiz.lives) * 50;
+    const finalPoints = answersPoints + heartsPoints;
+
+    // Renderiza a pontuação com destaque e o detalhamento
+    document.getElementById('quiz-results-level-label').textContent = `Nível: ${levelName}`;
     document.getElementById('quiz-results-score').textContent = `${quiz.score} / 20`;
+    document.getElementById('quiz-answers-points-label').textContent = `+${answersPoints} pts`;
+    document.getElementById('quiz-hearts-points-label').textContent = `+${heartsPoints} pts`;
+    document.getElementById('quiz-final-points-value').textContent = finalPoints;
+
+    // Renderiza os corações
+    let heartsHtml = '';
+    if (quiz.lives > 0) {
+      heartsHtml = '❤️'.repeat(quiz.lives);
+    } else {
+      heartsHtml = '💔';
+    }
+    document.getElementById('quiz-results-hearts-left').textContent = heartsHtml;
 
     // Mensagens de desempenho personalizadas
     const titles = {
@@ -779,6 +796,48 @@ const initApp = () => {
 
   document.getElementById('btn-quiz-to-menu').addEventListener('click', () => {
     transitionScreen(quizResultsScreen, menuScreen);
+  });
+
+  document.getElementById('btn-quiz-share').addEventListener('click', () => {
+    const levelName = {
+      facil: 'Fácil',
+      medio: 'Médio',
+      dificil: 'Difícil',
+      misto: 'Misto'
+    }[quiz.level];
+
+    const answersPoints = quiz.score * 10;
+    const heartsPoints = Math.max(0, quiz.lives) * 50;
+    const finalPoints = answersPoints + heartsPoints;
+    const heartsEmoji = quiz.lives > 0 ? '❤️'.repeat(quiz.lives) : '💔';
+
+    const shareText = `📖 Desafio de Conhecimento Bíblico (Chosen Block) 📖\n\n` +
+                      `Alcei a incrível pontuação de *${finalPoints} Pontos* no Nível *${levelName}*!\n` +
+                      `🎯 Acertos: ${quiz.score} de 20 (+${answersPoints} pts)\n` +
+                      `💖 Vidas Restantes: ${heartsEmoji} (+${heartsPoints} pts)\n\n` +
+                      `Você acha que consegue superar meu recorde? Jogue agora e mostre seu conhecimento bíblico!`;
+
+    const shareUrl = window.location.origin + window.location.pathname;
+
+    if (navigator.share) {
+      navigator.share({
+        title: 'Desafio de Conhecimento Bíblico',
+        text: shareText,
+        url: shareUrl
+      }).catch(err => {
+        console.warn('Erro ao compartilhar:', err);
+      });
+    } else {
+      // Fallback: Copiar para a área de transferência e abrir WhatsApp
+      const textToCopy = `${shareText}\n🔗 Jogue em: ${shareUrl}`;
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        alert('Pontuação copiada para a área de transferência! Compartilhe com seus amigos.');
+        const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(textToCopy)}`;
+        window.open(waUrl, '_blank');
+      }).catch(err => {
+        console.error('Falha ao copiar:', err);
+      });
+    }
   });
 };
 

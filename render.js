@@ -252,9 +252,17 @@ class ChosenBlockRender {
 
   // Atualiza em tempo real as células sob a peça exibindo a sombra/preview
   updatePlacementPreview(pointerX, pointerY) {
+    const targetCell = this.findGridCellUnderPointer(pointerX, pointerY);
+    
+    // Se a célula sob o ponteiro não mudou em relação ao frame anterior, ignora
+    if (this.lastPreviewPos && targetCell && 
+        this.lastPreviewPos.row === targetCell.row && 
+        this.lastPreviewPos.col === targetCell.col) {
+      return;
+    }
+
     this.clearAllPreviews();
 
-    const targetCell = this.findGridCellUnderPointer(pointerX, pointerY);
     if (!targetCell) {
       this.lastPreviewPos = null;
       return;

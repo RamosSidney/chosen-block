@@ -351,21 +351,40 @@
       </header>
 
       <main class="menu-main" style="justify-content: center; flex-grow: 1; text-align: center; gap: 1.5rem;">
-        <div class="results-card glass-card" style="padding: 2rem; display: flex; flex-direction: column; gap: 1.25rem; align-items: center;">
-          <h2 id="quiz-results-title" style="font-size: 1.5rem; text-shadow: 0 0 10px var(--primary-glow);">Muito bem! 🌟</h2>
+        <div class="results-card glass-card" style="padding: 2rem; display: flex; flex-direction: column; gap: 1.25rem; align-items: center; width: 100%; max-width: 350px;">
+          <h2 id="quiz-results-title" style="font-size: 1.4rem; text-shadow: 0 0 10px var(--primary-glow);">Muito bem! 🌟</h2>
           
-          <div class="final-score-container glass-card" style="padding: 1rem 2rem; width: 100%; max-width: 240px; margin: 0 auto;">
-            <div class="final-stat">
-              <span class="stat-label" id="quiz-results-level-label">Nível Fácil</span>
-              <span id="quiz-results-score" class="stat-val animate-scale" style="font-size: 2.5rem; display: block;">15 / 20</span>
-            </div>
-            <div id="quiz-new-record-badge" class="record-badge hidden" style="margin-top: 0.5rem;">🔥 NOVO RECORDE!</div>
+          <!-- Destaque para a Pontuação Final com bastante brilho e gradiente -->
+          <div id="quiz-score-highlight" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(236, 72, 153, 0.15)); border: 2px solid var(--secondary); box-shadow: 0 0 20px rgba(236, 72, 153, 0.4); border-radius: 14px; padding: 18px 25px; width: 100%; text-align: center; box-sizing: border-box;">
+            <span style="font-size: 0.85rem; letter-spacing: 1.5px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 0.4rem;">Pontuação Final</span>
+            <span id="quiz-final-points-value" class="animate-scale" style="font-size: 3.8rem; font-weight: 900; background: linear-gradient(to right, #fbbf24, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 2px 8px rgba(236, 72, 153, 0.5)); display: block; line-height: 1; margin: 0.2rem 0;">0</span>
+            <span style="font-size: 0.85rem; font-weight: 700; color: var(--secondary); display: block;">PONTOS</span>
           </div>
 
-          <div class="score-item" style="border: none; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 10px 15px; width: 100%; display: flex; justify-content: space-between; align-items: center;">
-            <span class="mode-name">Recorde Pessoal:</span>
-            <strong id="quiz-best-score" class="score-number" style="color: var(--primary); font-size: 1.15rem; font-weight: 800;">18 / 20</strong>
+          <!-- Detalhamento dos Acertos e Corações Restantes -->
+          <div class="results-stats-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; box-sizing: border-box;">
+            <div class="result-stat glass-card" style="padding: 10px; text-align: center;">
+              <span class="stat-label" style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem; font-weight: 600;">Acertos</span>
+              <span id="quiz-results-score" style="font-size: 1.35rem; font-weight: 800; display: block; color: var(--primary);">0 / 20</span>
+              <span id="quiz-answers-points-label" style="font-size: 0.75rem; font-weight: 700; color: #a1a1aa; display: block; margin-top: 0.15rem;">+0 pts</span>
+            </div>
+            <div class="result-stat glass-card" style="padding: 10px; text-align: center;">
+              <span class="stat-label" id="quiz-results-level-label" style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem; font-weight: 600;">Nível: Fácil</span>
+              <span id="quiz-results-hearts-left" style="font-size: 1.1rem; font-weight: 800; display: block; height: 1.6rem; line-height: 1.6rem; color: #f43f5e;">❤️ ❤️ ❤️</span>
+              <span id="quiz-hearts-points-label" style="font-size: 0.75rem; font-weight: 700; color: #a1a1aa; display: block; margin-top: 0.15rem;">+0 pts</span>
+            </div>
           </div>
+
+          <div class="score-item" style="border: none; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 10px 15px; width: 100%; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box;">
+            <span class="mode-name" style="font-size: 0.9rem;">Recorde Pessoal:</span>
+            <strong id="quiz-best-score" class="score-number" style="color: var(--primary); font-size: 1.05rem; font-weight: 800;">18 / 20</strong>
+          </div>
+          <div id="quiz-new-record-badge" class="record-badge hidden" style="width: 100%; box-sizing: border-box;">🔥 NOVO RECORDE DE ACERTOS!</div>
+
+          <!-- Botão de Compartilhar Resultado -->
+          <button id="btn-quiz-share" class="btn-primary glass-btn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(236, 72, 153, 0.4)); border-color: rgba(236, 72, 153, 0.6); box-sizing: border-box;">
+            <span>📢 Compartilhar Resultado</span>
+          </button>
         </div>
 
         <div class="menu-actions" style="display: flex; flex-direction: column; gap: 0.75rem;">

@@ -684,6 +684,7 @@ body {
   transform: scale(1.05) translateY(-50px) rotate(2deg); /* Desloca ligeiramente acima do dedo */
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
   opacity: 0.95;
+  will-change: transform;
 }
 
 /* Estilo do bloco individual na peça */
