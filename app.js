@@ -661,7 +661,7 @@ const initApp = () => {
     const finalPoints = answersPoints + heartsPoints;
 
     // Renderiza a pontuação com destaque e o detalhamento
-    document.getElementById('quiz-results-level-label').textContent = `Nível: ${levelName}`;
+    document.getElementById('quiz-results-level-label').textContent = levelName;
     document.getElementById('quiz-results-score').textContent = `${quiz.score} / 20`;
     document.getElementById('quiz-answers-points-label').textContent = `+${answersPoints} pts`;
     document.getElementById('quiz-hearts-points-label').textContent = `+${heartsPoints} pts`;
