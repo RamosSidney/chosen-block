@@ -415,5 +415,4 @@ const AudioManager = {
     });
     this.quizMusicNodes = [];
   }
-}
 };
