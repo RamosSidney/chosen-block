@@ -139,7 +139,7 @@
           </div>
         </div>
 
-        <button id="btn-toggle-sound" class="btn-icon glass-btn" aria-label="Ativar/Desativar som">
+        <button id="btn-toggle-sound" class="btn-toggle-sound btn-icon glass-btn" aria-label="Ativar/Desativar som">
           <span class="sound-icon-on">🔊</span>
           <span class="sound-icon-off hidden">🔇</span>
         </button>
@@ -193,6 +193,11 @@
           </button>
           <span class="game-mode-tag" style="color: #a855f7; border-color: rgba(168, 85, 247, 0.25);">Desafio Bíblico</span>
         </div>
+
+        <button class="btn-toggle-sound btn-icon glass-btn" aria-label="Ativar/Desativar som">
+          <span class="sound-icon-on">🔊</span>
+          <span class="sound-icon-off hidden">🔇</span>
+        </button>
       </header>
 
       <main class="menu-main" style="justify-content: center; flex-grow: 1;">
@@ -243,18 +248,28 @@
           <span id="quiz-level-tag" class="game-mode-tag">Fácil</span>
         </div>
         
-        <div class="score-display-group" style="max-width: 140px;">
-          <div class="score-box glass-card">
-            <span class="score-label">Acertos</span>
-            <span id="quiz-score" class="score-val">0 / 20</span>
+        <div class="score-display-group" style="max-width: 200px; display: flex; gap: 0.35rem;">
+          <div class="score-box glass-card" style="padding: 4px 6px;">
+            <span class="score-label">Vidas</span>
+            <span id="quiz-lives" class="score-val" style="color: #f43f5e; font-size: 0.9rem;">❤️ ❤️ ❤️</span>
+          </div>
+          <div class="score-box glass-card" style="padding: 4px 6px;">
+            <span class="score-label">Moedas</span>
+            <span id="quiz-coins" class="score-val" style="color: #f59e0b; font-size: 0.9rem;">🪙 55</span>
           </div>
         </div>
+
+        <button class="btn-toggle-sound btn-icon glass-btn" aria-label="Ativar/Desativar som">
+          <span class="sound-icon-on">🔊</span>
+          <span class="sound-icon-off hidden">🔇</span>
+        </button>
       </header>
 
       <!-- Barra de progresso do Quiz -->
       <div class="quiz-progress-container glass-card">
         <div id="quiz-progress-bar"></div>
         <span id="quiz-progress-text">Pergunta 1 de 20</span>
+        <span id="quiz-score-indicator" style="z-index: 2; font-size: 0.85rem; font-weight: 600; color: var(--primary);">Acertos: 0</span>
       </div>
 
       <main class="game-area" style="justify-content: flex-start; gap: 0.75rem;">
@@ -268,25 +283,48 @@
           <button class="btn-option glass-card" data-idx="0">
             <span class="option-letter">A</span>
             <span class="option-text" id="opt-0">Opção A</span>
+            <span class="option-percentage" id="pct-0"></span>
           </button>
           <button class="btn-option glass-card" data-idx="1">
             <span class="option-letter">B</span>
             <span class="option-text" id="opt-1">Opção B</span>
+            <span class="option-percentage" id="pct-1"></span>
           </button>
           <button class="btn-option glass-card" data-idx="2">
             <span class="option-letter">C</span>
             <span class="option-text" id="opt-2">Opção C</span>
+            <span class="option-percentage" id="pct-2"></span>
           </button>
           <button class="btn-option glass-card" data-idx="3">
             <span class="option-letter">D</span>
             <span class="option-text" id="opt-3">Opção D</span>
+            <span class="option-percentage" id="pct-3"></span>
+          </button>
+        </div>
+
+        <!-- Painel de Ajudas (Pular, 50/50, Voto da Maioria) -->
+        <div class="quiz-helps-container">
+          <button class="btn-help glass-btn" id="btn-help-skip">
+            <span class="help-emoji">⏭️</span>
+            <span class="help-name">Pular</span>
+            <span class="help-cost">20 moedas</span>
+          </button>
+          <button class="btn-help glass-btn" id="btn-help-remove-two">
+            <span class="help-emoji">❌</span>
+            <span class="help-name">Excluir 2</span>
+            <span class="help-cost">25 moedas</span>
+          </button>
+          <button class="btn-help glass-btn" id="btn-help-audience">
+            <span class="help-emoji">📊</span>
+            <span class="help-name">Maioria</span>
+            <span class="help-cost">45 moedas</span>
           </button>
         </div>
 
         <!-- Painel de Feedback e Explicação Bíblica -->
         <div id="quiz-feedback-panel" class="glass-card hidden">
           <div class="feedback-header">
-            <span id="feedback-title">Correto!</span>
+            <span id="feedback-title"></span>
           </div>
           <p id="feedback-explanation">Explicação...</p>
           <button id="btn-quiz-next" class="btn-primary glass-btn" style="margin-top: 0.5rem; width: auto; align-self: flex-end; padding: 8px 24px; font-size: 0.95rem;">Avançar ➡️</button>
@@ -385,6 +423,19 @@
           <div class="score-item">
             <span class="mode-name">⏳ Contra o Tempo:</span>
             <strong id="high-time" class="score-number">0</strong>
+          </div>
+          <hr style="border: 0; border-top: 1px solid var(--panel-border); margin: 0.5rem 0;">
+          <div class="score-item">
+            <span class="mode-name">🌱 Quiz Fácil:</span>
+            <strong id="high-quiz-facil" class="score-number">0 / 20</strong>
+          </div>
+          <div class="score-item">
+            <span class="mode-name">🔥 Quiz Médio:</span>
+            <strong id="high-quiz-medio" class="score-number">0 / 20</strong>
+          </div>
+          <div class="score-item">
+            <span class="mode-name">👑 Quiz Difícil:</span>
+            <strong id="high-quiz-dificil" class="score-number">0 / 20</strong>
           </div>
         </div>
 

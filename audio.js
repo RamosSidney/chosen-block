@@ -2,6 +2,8 @@ console.log("Chosen Block: audio.js carregado!");
 const AudioManager = {
   ctx: null,
   muted: false,
+  quizMusicNodes: [],
+  quizMusicInterval: null,
 
   init() {
     if (this.ctx) return;
@@ -24,6 +26,9 @@ const AudioManager = {
     this.init();
     this.muted = !this.muted;
     localStorage.setItem('chosen_block_muted', this.muted);
+    if (this.muted) {
+      this.stopQuizMusic();
+    }
     return this.muted;
   },
 
@@ -314,5 +319,101 @@ const AudioManager = {
       osc.start(time);
       osc.stop(time + 0.4);
     });
+  },
+
+  // Efeito 9: Música tema de suspense do Quiz (Show do Milhão)
+  playQuizMusic() {
+    this.resume();
+    if (this.muted || !this.ctx) return;
+    if (this.quizMusicInterval) return; // Já está tocando
+
+    let beat = 0;
+    const playBeat = () => {
+      if (this.muted || !this.ctx || this.ctx.state === 'suspended') return;
+      const now = this.ctx.currentTime;
+      
+      // Batida 1: Baixo super grave (coração)
+      const osc1 = this.ctx.createOscillator();
+      const gain1 = this.ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(65, now); // Freqüência baixa
+      osc1.frequency.exponentialRampToValueAtTime(30, now + 0.15);
+      
+      gain1.gain.setValueAtTime(0.25, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      
+      osc1.connect(gain1);
+      gain1.connect(this.ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.2);
+      this.quizMusicNodes.push(osc1);
+
+      // Batida 2: Eco da batida do coração
+      const t2 = now + 0.22;
+      const osc2 = this.ctx.createOscillator();
+      const gain2 = this.ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(60, t2);
+      osc2.frequency.exponentialRampToValueAtTime(30, t2 + 0.12);
+      
+      gain2.gain.setValueAtTime(0.18, t2);
+      gain2.gain.exponentialRampToValueAtTime(0.001, t2 + 0.15);
+      
+      osc2.connect(gain2);
+      gain2.connect(this.ctx.destination);
+      osc2.start(t2);
+      osc2.stop(t2 + 0.18);
+      this.quizMusicNodes.push(osc2);
+
+      // A cada 4 batidas, toca um acorde menor em drone
+      if (beat % 4 === 0) {
+        // D2 (73.42Hz), A2 (110.0Hz), C3 (130.81Hz) - acorde menor de tensão
+        const notes = [73.42, 110.0, 130.81];
+        notes.forEach((freq, idx) => {
+          const oscP = this.ctx.createOscillator();
+          const gainP = this.ctx.createGain();
+          
+          oscP.type = 'triangle'; // Onda triangular suave e escura
+          oscP.frequency.setValueAtTime(freq, now);
+          
+          gainP.gain.setValueAtTime(0, now);
+          gainP.gain.linearRampToValueAtTime(0.06, now + 0.5);
+          gainP.gain.exponentialRampToValueAtTime(0.001, now + 2.2);
+          
+          oscP.connect(gainP);
+          gainP.connect(this.ctx.destination);
+          
+          oscP.start(now);
+          oscP.stop(now + 2.3);
+          this.quizMusicNodes.push(oscP);
+        });
+      }
+
+      // Limpa referências antigas para evitar vazamento de memória na lista
+      if (this.quizMusicNodes.length > 50) {
+        this.quizMusicNodes = this.quizMusicNodes.slice(-20);
+      }
+
+      beat++;
+    };
+
+    playBeat();
+    this.quizMusicInterval = setInterval(() => {
+      playBeat();
+    }, 1200); // Batida a cada 1.2 segundos
+  },
+
+  stopQuizMusic() {
+    if (this.quizMusicInterval) {
+      clearInterval(this.quizMusicInterval);
+      this.quizMusicInterval = null;
+    }
+    this.quizMusicNodes.forEach(node => {
+      try {
+        node.stop();
+      } catch (e) {}
+    });
+    this.quizMusicNodes = [];
   }
+}
 };

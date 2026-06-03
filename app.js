@@ -41,10 +41,7 @@ const initApp = () => {
   const highBombEl = document.getElementById('high-bomb');
   const highTimeEl = document.getElementById('high-time');
 
-  // Sons
-  const btnToggleSound = document.getElementById('btn-toggle-sound');
-  const soundIconOn = btnToggleSound.querySelector('.sound-icon-on');
-  const soundIconOff = btnToggleSound.querySelector('.sound-icon-off');
+  // Sons (Mapeados via classe .btn-toggle-sound)
 
   // Elementos dos Salmos Bíblicos
   const psalmDisplay = document.getElementById('psalm-display');
@@ -175,15 +172,20 @@ const initApp = () => {
     bestScoreEl.textContent = best;
   }
 
-  // Sincroniza ícones do botão de volume
+  // Sincroniza ícones de todos os botões de volume
   function updateSoundUI() {
-    if (audio.muted) {
-      soundIconOn.classList.add('hidden');
-      soundIconOff.classList.remove('hidden');
-    } else {
-      soundIconOn.classList.remove('hidden');
-      soundIconOff.classList.add('hidden');
-    }
+    const soundButtons = document.querySelectorAll('.btn-toggle-sound');
+    soundButtons.forEach(btn => {
+      const onIcon = btn.querySelector('.sound-icon-on');
+      const offIcon = btn.querySelector('.sound-icon-off');
+      if (audio.muted) {
+        if (onIcon) onIcon.classList.add('hidden');
+        if (offIcon) offIcon.classList.remove('hidden');
+      } else {
+        if (onIcon) onIcon.classList.remove('hidden');
+        if (offIcon) offIcon.classList.add('hidden');
+      }
+    });
   }
 
 
@@ -355,6 +357,12 @@ const initApp = () => {
     highClassicEl.textContent = game.bestScores.classic[currentGridSize] || 0;
     highBombEl.textContent = game.bestScores.bomb[currentGridSize] || 0;
     highTimeEl.textContent = game.bestScores.time[currentGridSize] || 0;
+    
+    // Atualiza os recordes do Quiz Bíblico no modal
+    document.getElementById('high-quiz-facil').textContent = `${quiz.bestScores.facil || 0} / 20`;
+    document.getElementById('high-quiz-medio').textContent = `${quiz.bestScores.medio || 0} / 20`;
+    document.getElementById('high-quiz-dificil').textContent = `${quiz.bestScores.dificil || 0} / 20`;
+    
     openModal(modalScores);
   });
 
@@ -364,11 +372,19 @@ const initApp = () => {
 
   // Botão Limpar Recordes
   document.getElementById('btn-reset-scores').addEventListener('click', () => {
-    if (confirm('Deseja realmente apagar todo o seu histórico de recordes deste tamanho de grade?')) {
+    if (confirm('Deseja realmente apagar todo o seu histórico de recordes (incluindo o Desafio Bíblico)?')) {
       game.resetHighScores();
+      quiz.bestScores = { facil: 0, medio: 0, dificil: 0 };
+      quiz.saveBestScores();
+      
       highClassicEl.textContent = 0;
       highBombEl.textContent = 0;
       highTimeEl.textContent = 0;
+      
+      document.getElementById('high-quiz-facil').textContent = "0 / 20";
+      document.getElementById('high-quiz-medio').textContent = "0 / 20";
+      document.getElementById('high-quiz-dificil').textContent = "0 / 20";
+      
       updateScoresUI();
     }
   });
@@ -418,10 +434,12 @@ const initApp = () => {
     }
   });
 
-  // Botão Ativar/Desativar Sons
-  btnToggleSound.addEventListener('click', () => {
-    audio.toggleMute();
-    updateSoundUI();
+  // Botões Ativar/Desativar Sons (Sincronizados)
+  document.querySelectorAll('.btn-toggle-sound').forEach(btn => {
+    btn.addEventListener('click', () => {
+      audio.toggleMute();
+      updateSoundUI();
+    });
   });
 
   // Ações de Game Over
@@ -438,6 +456,8 @@ const initApp = () => {
      GERENCIAMENTO DE LÓGICA E EVENTOS DO QUIZ
      ========================================== */
 
+  let quizAutoAdvanceTimeout = null;
+
   function startQuiz(level) {
     quiz.start(level);
     
@@ -449,6 +469,9 @@ const initApp = () => {
     };
     document.getElementById('quiz-level-tag').textContent = levelLabels[level] || 'Fácil';
     
+    // Inicia a trilha sonora tema do Show do Milhão
+    audio.playQuizMusic();
+    
     // Renderiza primeira pergunta
     renderQuizQuestion();
     
@@ -456,7 +479,51 @@ const initApp = () => {
     transitionScreen(quizSetupScreen, quizScreen);
   }
 
+  function updateQuizStatsUI() {
+    // Atualiza corações de vidas (❤️ para ativas, 🖤 para perdidas)
+    const livesEl = document.getElementById('quiz-lives');
+    let hearts = '';
+    for (let i = 0; i < 3; i++) {
+      hearts += i < quiz.lives ? '❤️ ' : '🖤 ';
+    }
+    livesEl.textContent = hearts.trim();
+
+    // Atualiza moedas
+    document.getElementById('quiz-coins').textContent = `🪙 ${quiz.coins}`;
+
+    // Atualiza estados dos botões de ajuda
+    const btnSkip = document.getElementById('btn-help-skip');
+    const btnRemove = document.getElementById('btn-help-remove-two');
+    const btnAudience = document.getElementById('btn-help-audience');
+
+    // Pular: custa 20 moedas. Desativa se já respondeu ou saldo insuficiente
+    if (quiz.coins < 20 || quiz.answered) {
+      btnSkip.classList.add('disabled');
+    } else {
+      btnSkip.classList.remove('disabled');
+    }
+
+    // Excluir 2 (50/50): custa 25 moedas. Desativa se já respondeu, saldo insuficiente ou já usado nesta pergunta
+    if (quiz.coins < 25 || quiz.answered || quiz.fiftyFiftyUsed) {
+      btnRemove.classList.add('disabled');
+    } else {
+      btnRemove.classList.remove('disabled');
+    }
+
+    // Voto da maioria: custa 45 moedas. Desativa se já respondeu, saldo insuficiente ou já usado nesta pergunta
+    if (quiz.coins < 45 || quiz.answered || quiz.majorityUsed) {
+      btnAudience.classList.add('disabled');
+    } else {
+      btnAudience.classList.remove('disabled');
+    }
+  }
+
   function renderQuizQuestion() {
+    if (quizAutoAdvanceTimeout) {
+      clearTimeout(quizAutoAdvanceTimeout);
+      quizAutoAdvanceTimeout = null;
+    }
+
     const q = quiz.getCurrentQuestion();
     if (!q) return;
 
@@ -469,6 +536,13 @@ const initApp = () => {
       btn.className = 'btn-option glass-card'; // Reseta classes
       btn.querySelector('.option-text').textContent = q.options[idx];
       btn.dataset.idx = idx;
+
+      // Reseta visual das ajudas nas alternativas
+      btn.classList.remove('eliminated', 'show-pct');
+      const pctSpan = btn.querySelector('.option-percentage');
+      if (pctSpan) {
+        pctSpan.textContent = '';
+      }
     });
 
     // Atualiza barra de progresso
@@ -478,12 +552,16 @@ const initApp = () => {
     document.getElementById('quiz-progress-text').textContent = `Pergunta ${currentQNum} de 20`;
 
     // Atualiza acertos
-    document.getElementById('quiz-score').textContent = `${quiz.score} / ${quiz.currentIndex}`;
+    document.getElementById('quiz-score-indicator').textContent = `Acertos: ${quiz.score}`;
 
-    // Esconde o painel de feedback
+    // Esconde e reseta o painel de feedback (corrigindo bug #10!)
     const feedbackPanel = document.getElementById('quiz-feedback-panel');
-    feedbackPanel.classList.add('hidden');
-    feedbackPanel.className = 'glass-card';
+    feedbackPanel.className = 'glass-card hidden';
+    document.getElementById('feedback-title').textContent = '';
+    document.getElementById('feedback-explanation').textContent = '';
+
+    // Atualiza vidas e moedas na UI
+    updateQuizStatsUI();
   }
 
   function handleOptionSelection(selectedIdx) {
@@ -499,9 +577,6 @@ const initApp = () => {
       audio.playQuizIncorrect();
     }
 
-    // Atualiza display de acertos
-    document.getElementById('quiz-score').textContent = `${quiz.score} / ${quiz.currentIndex + 1}`;
-
     // Destaca as opções
     const optionButtons = document.querySelectorAll('.btn-option');
     optionButtons.forEach((btn, idx) => {
@@ -513,24 +588,48 @@ const initApp = () => {
       }
     });
 
-    // Mostra o painel de feedback com a explicação
+    // Mostra o painel de feedback
     const feedbackPanel = document.getElementById('quiz-feedback-panel');
     const feedbackTitle = document.getElementById('feedback-title');
     const feedbackExplanation = document.getElementById('feedback-explanation');
 
     if (result.isCorrect) {
       feedbackPanel.className = 'glass-card correct-feedback';
-      feedbackTitle.textContent = 'Resposta Correta! ✨';
+      feedbackTitle.textContent = `Resposta Correta! ✨ (+${result.rewardGained} moedas)`;
+      
+      // Auto-avançar após 1.8 segundos ao acertar (requisito #8)
+      quizAutoAdvanceTimeout = setTimeout(() => {
+        handleQuizNext();
+      }, 1800);
     } else {
       feedbackPanel.className = 'glass-card incorrect-feedback';
-      feedbackTitle.textContent = 'Resposta Incorreta ❌';
+      if (result.livesLeft <= 0) {
+        feedbackTitle.textContent = 'Fim de Jogo! 💔 (Sem vidas restantes)';
+      } else {
+        feedbackTitle.textContent = 'Resposta Incorreta ❌';
+      }
+      // NÃO auto-avançar ao errar, dando tempo de ler a referência bíblica
     }
 
     feedbackExplanation.textContent = quiz.getCurrentQuestion().explanation;
     feedbackPanel.classList.remove('hidden');
+
+    // Desativa botões de ajuda imediatamente após responder
+    updateQuizStatsUI();
   }
 
   function handleQuizNext() {
+    if (quizAutoAdvanceTimeout) {
+      clearTimeout(quizAutoAdvanceTimeout);
+      quizAutoAdvanceTimeout = null;
+    }
+
+    // Verifica se perdeu todas as vidas antes de carregar a próxima pergunta
+    if (quiz.lives <= 0) {
+      showQuizResults();
+      return;
+    }
+
     const hasNext = quiz.nextQuestion();
     if (hasNext) {
       renderQuizQuestion();
@@ -540,6 +639,9 @@ const initApp = () => {
   }
 
   function showQuizResults() {
+    // Para a música do Show do Milhão
+    audio.stopQuizMusic();
+
     const levelName = {
       facil: 'Fácil',
       medio: 'Médio',
@@ -563,12 +665,17 @@ const initApp = () => {
     else if (quiz.score >= 7) performanceKey = 'average';
 
     const titleInfo = titles[performanceKey];
-    document.getElementById('quiz-results-title').innerHTML = `${titleInfo[0]}<br><span style="font-size: 0.9rem; font-weight: normal; color: var(--text-muted);">${titleInfo[1]}</span>`;
+    
+    if (quiz.lives <= 0) {
+      document.getElementById('quiz-results-title').innerHTML = `Fim das Vidas! 💔<br><span style="font-size: 0.9rem; font-weight: normal; color: var(--text-muted);">Você errou 3 vezes e perdeu todas as vidas.</span>`;
+    } else {
+      document.getElementById('quiz-results-title').innerHTML = `${titleInfo[0]}<br><span style="font-size: 0.9rem; font-weight: normal; color: var(--text-muted);">${titleInfo[1]}</span>`;
+    }
 
     // Carrega recorde anterior
     const prevBest = quiz.bestScores[quiz.level] || 0;
     
-    // Salva pontuação (e verifica se foi novo recorde)
+    // Salva pontuação
     const isNewRecord = quiz.updateBestScores();
     const newRecordBadge = document.getElementById('quiz-new-record-badge');
     
@@ -598,6 +705,11 @@ const initApp = () => {
 
   document.getElementById('btn-quiz-back').addEventListener('click', () => {
     if (confirm('Tem certeza que deseja sair do desafio bíblico atual? Seu progresso será perdido.')) {
+      audio.stopQuizMusic();
+      if (quizAutoAdvanceTimeout) {
+        clearTimeout(quizAutoAdvanceTimeout);
+        quizAutoAdvanceTimeout = null;
+      }
       transitionScreen(quizScreen, quizSetupScreen);
     }
   });
@@ -607,6 +719,42 @@ const initApp = () => {
       const idx = parseInt(btn.dataset.idx);
       handleOptionSelection(idx);
     });
+  });
+
+  // Ajudas / Power-ups
+  document.getElementById('btn-help-skip').addEventListener('click', () => {
+    if (quiz.useSkip()) {
+      audio.playPlace(); // som de confirmação
+      updateQuizStatsUI();
+      handleQuizNext(); // pula para a próxima imediatamente
+    }
+  });
+
+  document.getElementById('btn-help-remove-two').addEventListener('click', () => {
+    const toEliminate = quiz.useFiftyFifty();
+    if (toEliminate) {
+      audio.playPlace();
+      updateQuizStatsUI();
+      // Desativa e apaga visualmente duas opções erradas
+      const optionButtons = document.querySelectorAll('.btn-option');
+      toEliminate.forEach(idx => {
+        optionButtons[idx].classList.add('eliminated');
+      });
+    }
+  });
+
+  document.getElementById('btn-help-audience').addEventListener('click', () => {
+    const percentages = quiz.useMajority();
+    if (percentages) {
+      audio.playPlace();
+      updateQuizStatsUI();
+      // Exibe a porcentagem flutuando em cada opção
+      const optionButtons = document.querySelectorAll('.btn-option');
+      optionButtons.forEach((btn, idx) => {
+        btn.classList.add('show-pct');
+        btn.querySelector('.option-percentage').textContent = `${percentages[idx]}%`;
+      });
+    }
   });
 
   document.getElementById('btn-quiz-next').addEventListener('click', () => {

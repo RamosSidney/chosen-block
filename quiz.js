@@ -585,6 +585,12 @@ const BIBLE_QUIZ_QUESTIONS = {
   ]
 };
 
+const COIN_REWARDS = {
+  facil: 25,
+  medio: 30,
+  dificil: 35
+};
+
 class BibleQuizGame {
   constructor() {
     this.level = 'facil'; // 'facil', 'medio', 'dificil'
@@ -593,6 +599,10 @@ class BibleQuizGame {
     this.score = 0;
     this.selectedOption = null;
     this.answered = false;
+    this.lives = 3;       // Vidas restantes
+    this.coins = 55;      // Moedas acumuladas
+    this.fiftyFiftyUsed = false;
+    this.majorityUsed = false;
     this.bestScores = {
       facil: 0,
       medio: 0,
@@ -608,6 +618,10 @@ class BibleQuizGame {
     this.score = 0;
     this.selectedOption = null;
     this.answered = false;
+    this.lives = 3;
+    this.coins = 55;
+    this.fiftyFiftyUsed = false;
+    this.majorityUsed = false;
 
     const pool = BIBLE_QUIZ_QUESTIONS[level] || [];
     // Clona e embaralha as perguntas da reserva
@@ -634,27 +648,84 @@ class BibleQuizGame {
 
     const currentQuestion = this.getCurrentQuestion();
     const isCorrect = (optionIndex === currentQuestion.answer);
+    let rewardGained = 0;
     
     if (isCorrect) {
       this.score++;
+      rewardGained = COIN_REWARDS[this.level] || 25;
+      this.coins += rewardGained;
+    } else {
+      this.lives--;
     }
 
     return {
       isCorrect: isCorrect,
-      correctIndex: currentQuestion.answer
+      correctIndex: currentQuestion.answer,
+      rewardGained: rewardGained,
+      livesLeft: this.lives
     };
+  }
+
+  // Usa o Pulo (custa 20 moedas)
+  useSkip() {
+    if (this.answered || this.coins < 20) return false;
+    this.coins -= 20;
+    return true;
+  }
+
+  // Usa o 50/50 (custa 25 moedas)
+  useFiftyFifty() {
+    if (this.answered || this.coins < 25 || this.fiftyFiftyUsed) return null;
+    this.coins -= 25;
+    this.fiftyFiftyUsed = true;
+
+    const correctIdx = this.getCurrentQuestion().answer;
+    const wrongIndices = [0, 1, 2, 3].filter(idx => idx !== correctIdx);
+    // Escolhe aleatoriamente duas opções incorretas para excluir
+    const toEliminate = wrongIndices.sort(() => Math.random() - 0.5).slice(0, 2);
+    return toEliminate;
+  }
+
+  // Usa o Voto da Maioria (custa 45 moedas)
+  useMajority() {
+    if (this.answered || this.coins < 45 || this.majorityUsed) return null;
+    this.coins -= 45;
+    this.majorityUsed = true;
+
+    const correctIdx = this.getCurrentQuestion().answer;
+    // O correto terá a maioria absoluta, entre 65% e 85% dos votos
+    const correctPct = Math.floor(Math.random() * 21) + 65;
+    let remaining = 100 - correctPct;
+
+    const percentages = [0, 0, 0, 0];
+    percentages[correctIdx] = correctPct;
+
+    const wrongIndices = [0, 1, 2, 3].filter(idx => idx !== correctIdx);
+    const val1 = Math.floor(Math.random() * (remaining - 10)) + 5;
+    remaining -= val1;
+    const val2 = Math.floor(Math.random() * (remaining - 4)) + 2;
+    remaining -= val2;
+    const val3 = remaining;
+
+    percentages[wrongIndices[0]] = val1;
+    percentages[wrongIndices[1]] = val2;
+    percentages[wrongIndices[2]] = val3;
+
+    return percentages;
   }
 
   // Avança para a próxima pergunta. Retorna false se o quiz chegou ao fim.
   nextQuestion() {
-    if (this.currentIndex < 19 && this.currentIndex < this.questions.length - 1) {
+    if (this.currentIndex < 19 && this.currentIndex < this.questions.length - 1 && this.lives > 0) {
       this.currentIndex++;
       this.selectedOption = null;
       this.answered = false;
+      this.fiftyFiftyUsed = false;
+      this.majorityUsed = false;
       return true;
     }
     
-    // Fim das 20 perguntas, atualiza recordes locais
+    // Fim das 20 perguntas ou sem vidas, atualiza recordes locais
     this.updateBestScores();
     return false;
   }
