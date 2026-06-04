@@ -531,6 +531,24 @@ const initApp = () => {
       quizAutoAdvanceTimeout = null;
     }
 
+    // Verifica transição de fase/nível
+    if (quiz.levelTransition) {
+      const transitionModal = document.getElementById('quiz-level-transition');
+      const transitionMsg = document.getElementById('transition-msg');
+      transitionMsg.textContent = `Você completou todas as perguntas do nível ${quiz.transitionFrom} e passou para o nível ${quiz.transitionTo}. Suas vidas foram renovadas! ❤️❤️❤️`;
+      openModal(transitionModal);
+      quiz.levelTransition = false; // Limpa flag
+      
+      // Atualiza visualmente o nível ativo
+      const levelLabels = {
+        facil: 'Fácil 🌱',
+        medio: 'Médio 🔥',
+        dificil: 'Difícil 👑',
+        misto: 'Misto 🌀'
+      };
+      document.getElementById('quiz-level-tag').textContent = levelLabels[quiz.level] || 'Fácil';
+    }
+
     // Exibe o painel de ajudas
     document.getElementById('quiz-helps-panel').classList.remove('hidden');
 
@@ -556,11 +574,12 @@ const initApp = () => {
       }
     });
 
-    // Atualiza barra de progresso
+    // Atualiza barra de progresso (dinamicamente baseado no total de perguntas da fase)
     const currentQNum = quiz.currentIndex + 1;
-    const progressPct = (currentQNum / 20) * 100;
+    const totalQNum = quiz.questions.length;
+    const progressPct = (currentQNum / totalQNum) * 100;
     document.getElementById('quiz-progress-bar').style.width = `${progressPct}%`;
-    document.getElementById('quiz-progress-text').textContent = `Pergunta ${currentQNum} de 20`;
+    document.getElementById('quiz-progress-text').textContent = `Pergunta ${currentQNum} de ${totalQNum}`;
 
     // Atualiza acertos
     document.getElementById('quiz-score-indicator').textContent = `Acertos: ${quiz.score}`;
@@ -609,12 +628,27 @@ const initApp = () => {
 
     if (result.isCorrect) {
       feedbackPanel.className = 'glass-card correct-feedback';
-      feedbackTitle.textContent = `Resposta Correta! ✨ (+${result.rewardGained} moedas)`;
       
-      // Auto-avançar após 1.8 segundos ao acertar (requisito #8)
-      quizAutoAdvanceTimeout = setTimeout(() => {
-        handleQuizNext();
-      }, 1800);
+      const finalPoints = quiz.getFinalPoints();
+      const prevBest = quiz.bestScores[quiz.level] || 0;
+      let titleText = '';
+      
+      // Se superou o recorde anterior (prioridade para a mensagem de recorde)
+      if (prevBest > 0 && finalPoints > prevBest) {
+        titleText = `Você já tem um novo recorde! 🏆 (+${result.rewardGained} moedas)`;
+      } else {
+        // Mensagens motivacionais aleatórias de progresso
+        const messages = [
+          "Continue assim! ✨",
+          "Você está indo muito bem! 🌟",
+          "Que sabedoria! 📖",
+          "Excelente! 🎯",
+          "Resposta Correta! 💫"
+        ];
+        const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+        titleText = `${randomMsg} (+${result.rewardGained} moedas)`;
+      }
+      feedbackTitle.textContent = titleText;
     } else {
       feedbackPanel.className = 'glass-card incorrect-feedback';
       if (result.livesLeft <= 0) {
@@ -622,7 +656,6 @@ const initApp = () => {
       } else {
         feedbackTitle.textContent = 'Resposta Incorreta ❌';
       }
-      // NÃO auto-avançar ao errar, dando tempo de ler a referência bíblica
     }
 
     feedbackExplanation.textContent = quiz.getCurrentQuestion().explanation;
@@ -669,7 +702,7 @@ const initApp = () => {
 
     // Renderiza a pontuação com destaque e o detalhamento
     document.getElementById('quiz-results-level-label').textContent = levelName;
-    document.getElementById('quiz-results-score').textContent = `${quiz.score} / 20`;
+    document.getElementById('quiz-results-score').textContent = quiz.score;
     document.getElementById('quiz-answers-points-label').textContent = `+${answersPoints} pts`;
     document.getElementById('quiz-hearts-points-label').textContent = `+${heartsPoints} pts`;
     document.getElementById('quiz-final-points-value').textContent = finalPoints;
@@ -683,25 +716,34 @@ const initApp = () => {
     }
     document.getElementById('quiz-results-hearts-left').textContent = heartsHtml;
 
-    // Mensagens de desempenho personalizadas
-    const titles = {
-      excellent: ["Excepcional! 👑", "Um verdadeiro mestre das Escrituras!"],
-      good: ["Muito bem! 🌟", "Excelente conhecimento da Palavra!"],
-      average: ["Bom trabalho! 🙏", "Continue estudando e meditando!"],
-      poor: ["Tente novamente! 📖", "Uma ótima oportunidade para ler mais a Bíblia!"]
-    };
-
-    let performanceKey = 'poor';
-    if (quiz.score >= 18) performanceKey = 'excellent';
-    else if (quiz.score >= 13) performanceKey = 'good';
-    else if (quiz.score >= 7) performanceKey = 'average';
-
-    const titleInfo = titles[performanceKey];
-    
-    if (quiz.lives <= 0) {
-      document.getElementById('quiz-results-title').innerHTML = `Fim das Vidas! 💔<br><span style="font-size: 0.9rem; font-weight: normal; color: var(--text-muted);">Você errou 3 vezes e perdeu todas as vidas.</span>`;
+    // Elemento de Destaque SUPER JOGADOR
+    const superBadge = document.getElementById('super-player-badge');
+    if (quiz.conqueredAll) {
+      superBadge.classList.remove('hidden');
+      document.getElementById('quiz-results-title').innerHTML = `CONQUISTA SUPREMA! 👑<br><span style="font-size: 0.95rem; font-weight: bold; color: #fbbf24;">SUPER JOGADOR e CONHECEDOR das Escrituras!</span>`;
     } else {
-      document.getElementById('quiz-results-title').innerHTML = `${titleInfo[0]}<br><span style="font-size: 0.9rem; font-weight: normal; color: var(--text-muted);">${titleInfo[1]}</span>`;
+      superBadge.classList.add('hidden');
+      
+      // Mensagens de desempenho personalizadas
+      const titles = {
+        excellent: ["Excepcional! 👑", "Um verdadeiro mestre das Escrituras!"],
+        good: ["Muito bem! 🌟", "Excelente conhecimento da Palavra!"],
+        average: ["Bom trabalho! 🙏", "Continue estudando e meditando!"],
+        poor: ["Tente novamente! 📖", "Uma ótima oportunidade para ler mais a Bíblia!"]
+      };
+
+      let performanceKey = 'poor';
+      if (quiz.score >= 80) performanceKey = 'excellent';
+      else if (quiz.score >= 50) performanceKey = 'good';
+      else if (quiz.score >= 20) performanceKey = 'average';
+
+      const titleInfo = titles[performanceKey];
+      
+      if (quiz.lives <= 0) {
+        document.getElementById('quiz-results-title').innerHTML = `Fim das Vidas! 💔<br><span style="font-size: 0.9rem; font-weight: normal; color: var(--text-muted);">Você errou 3 vezes e perdeu todas as vidas.</span>`;
+      } else {
+        document.getElementById('quiz-results-title').innerHTML = `${titleInfo[0]}<br><span style="font-size: 0.9rem; font-weight: normal; color: var(--text-muted);">${titleInfo[1]}</span>`;
+      }
     }
 
     // Carrega recorde anterior
@@ -805,6 +847,10 @@ const initApp = () => {
     transitionScreen(quizResultsScreen, menuScreen);
   });
 
+  document.getElementById('btn-transition-continue').addEventListener('click', () => {
+    closeModal(document.getElementById('quiz-level-transition'));
+  });
+
   document.getElementById('btn-quiz-share').addEventListener('click', () => {
     const levelName = {
       facil: 'Fácil',
@@ -820,7 +866,7 @@ const initApp = () => {
 
     const shareText = `📖 Desafio de Conhecimento Bíblico (Chosen Block) 📖\n\n` +
                       `Alcei a incrível pontuação de *${finalPoints} Pontos* no Nível *${levelName}*!\n` +
-                      `🎯 Acertos: ${quiz.score} de 20 (+${answersPoints} pts)\n` +
+                      `🎯 Acertos: ${quiz.score} (+${answersPoints} pts)\n` +
                       `💖 Vidas Restantes: ${heartsEmoji} (+${heartsPoints} pts)\n\n` +
                       `Você acha que consegue superar meu recorde? Jogue agora e mostre seu conhecimento bíblico!`;
 

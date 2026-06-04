@@ -101,7 +101,7 @@
             <div class="mode-icon">📖</div>
             <div class="mode-info">
               <h3>Desafio Bíblico</h3>
-              <p>Teste seus conhecimentos com 20 perguntas!</p>
+              <p>Responda sem limites e conquiste a coroa!</p>
             </div>
             <span class="badge" style="background: linear-gradient(135deg, #a855f7, #ec4899); box-shadow: 0 3px 8px rgba(168, 85, 247, 0.4);">Novo</span>
           </button>
@@ -114,7 +114,7 @@
       </main>
 
       <footer class="menu-footer">
-        <p>@iejchosen_7l <span class="version-tag">v1.0.5</span></p>
+        <p>@iejchosen_7l <span class="version-tag">v1.1.0</span></p>
       </footer>
     </div>
 
@@ -203,7 +203,7 @@
       <main class="menu-main" style="justify-content: center; flex-grow: 1;">
         <div style="text-align: center; margin-bottom: 1rem;">
           <h2 style="font-family: var(--font-logo); font-size: 1.8rem; margin-bottom: 0.25rem;">Escolha a Dificuldade</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Responda a 20 perguntas do nível selecionado</p>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Responda o máximo que puder e tente se tornar um Super Jogador!</p>
         </div>
 
         <div class="game-modes-grid">
@@ -242,7 +242,7 @@
       </main>
 
       <footer class="menu-footer">
-        <p>@iejchosen_7l <span class="version-tag">v1.0.5</span></p>
+        <p>@iejchosen_7l <span class="version-tag">v1.1.0</span></p>
       </footer>
     </div>
 
@@ -276,7 +276,7 @@
       <!-- Barra de progresso do Quiz -->
       <div class="quiz-progress-container glass-card">
         <div id="quiz-progress-bar"></div>
-        <span id="quiz-progress-text">Pergunta 1 de 20</span>
+        <span id="quiz-progress-text">Pergunta 1</span>
         <span id="quiz-score-indicator" style="z-index: 2; font-size: 0.85rem; font-weight: 600; color: var(--primary);">Acertos: 0</span>
       </div>
 
@@ -354,6 +354,13 @@
         <div class="results-card glass-card" style="padding: 1.75rem 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; align-items: center; width: 100%; max-width: 350px;">
           <h2 id="quiz-results-title" style="font-size: 1.4rem; text-shadow: 0 0 10px var(--primary-glow); margin: 0;">Muito bem! 🌟</h2>
           
+          <!-- Elemento de Destaque SUPER JOGADOR -->
+          <div id="super-player-badge" class="hidden" style="background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.2)); border: 2px solid #fbbf24; box-shadow: 0 0 20px rgba(251, 191, 36, 0.5); border-radius: 14px; padding: 12px; width: 100%; box-sizing: border-box; text-align: center; margin-top: -0.5rem; animation: pulseScale 1.5s infinite alternate;">
+            <span style="font-size: 1.8rem; display: block;">👑 📖 👑</span>
+            <span style="font-size: 1.15rem; font-weight: 900; color: #fbbf24; text-transform: uppercase; display: block; margin-top: 0.15rem; text-shadow: 0 0 8px rgba(251, 191, 36, 0.5);">SUPER JOGADOR</span>
+            <span style="font-size: 0.8rem; font-weight: 700; color: #fef08a; display: block; margin-top: 0.1rem;">CONHECEDOR DAS ESCRITURAS</span>
+          </div>
+          
           <!-- Destaque para a Pontuação Final com bastante brilho e gradiente -->
           <div id="quiz-score-highlight" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(236, 72, 153, 0.15)); border: 2px solid var(--secondary); box-shadow: 0 0 20px rgba(236, 72, 153, 0.4); border-radius: 14px; padding: 18px 25px; width: 100%; text-align: center; box-sizing: border-box;">
             <span style="font-size: 0.85rem; letter-spacing: 1.5px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 0.4rem;">Pontuação Final</span>
@@ -374,7 +381,7 @@
             <div class="glass-card" style="padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; box-sizing: border-box; width: 100%;">
               <span class="stat-label" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">✅ Perguntas Corretas:</span>
               <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
-                <strong id="quiz-results-score" style="font-size: 1.05rem; font-weight: 800; color: var(--primary);">0 / 20</strong>
+                <strong id="quiz-results-score" style="font-size: 1.05rem; font-weight: 800; color: var(--primary);">0</strong>
                 <span id="quiz-answers-points-label" style="font-size: 0.75rem; font-weight: 700; color: #a1a1aa; margin-top: 0.1rem;">+0 pts</span>
               </div>
             </div>
@@ -415,7 +422,7 @@
       </main>
 
       <footer class="menu-footer">
-        <p>@iejchosen_7l <span class="version-tag">v1.0.5</span></p>
+        <p>@iejchosen_7l <span class="version-tag">v1.1.0</span></p>
       </footer>
     </div>
 
@@ -494,6 +501,16 @@
           <button id="btn-reset-scores" class="btn-danger-outline glass-btn">Limpar Histórico</button>
           <button id="btn-close-scores" class="btn-primary glass-btn">Fechar</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Banner de Transição de Nível -->
+    <div id="quiz-level-transition" class="modal-overlay hidden" style="z-index: 2000;">
+      <div class="modal-content glass-card animate-popup text-center" style="max-width: 320px; display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 2rem 1.5rem;">
+        <span style="font-size: 3rem; animation: pulseScale 1s infinite alternate; display: inline-block;">🎉</span>
+        <h2 style="color: #fbbf24; margin: 0; text-shadow: 0 0 10px rgba(251, 191, 36, 0.3); font-family: var(--font-logo); font-size: 1.6rem;">Fase Concluída!</h2>
+        <p id="transition-msg" style="color: var(--text-main); font-size: 0.95rem; line-height: 1.4; margin: 0;">Você completou todas as perguntas do nível Fácil e passou para o nível Médio. Suas vidas foram renovadas! ❤️❤️❤️</p>
+        <button id="btn-transition-continue" class="btn-primary glass-btn" style="width: 100%; padding: 10px; margin-top: 0.5rem;">Continuar ➡️</button>
       </div>
     </div>
 
