@@ -1384,10 +1384,12 @@ input:checked + .slider:before {
   transition: var(--transition-spring);
 }
 
-.btn-option:hover {
-  border-color: var(--primary);
-  box-shadow: 0 0 15px var(--primary-glow);
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .btn-option:hover {
+    border-color: var(--primary);
+    box-shadow: 0 0 15px var(--primary-glow);
+    transform: translateY(-2px);
+  }
 }
 
 .btn-option:active {
@@ -1410,9 +1412,11 @@ input:checked + .slider:before {
   transition: var(--transition-smooth);
 }
 
-.btn-option:hover .option-letter {
-  color: #fff;
-  background: var(--primary);
+@media (hover: hover) {
+  .btn-option:hover .option-letter {
+    color: #fff;
+    background: var(--primary);
+  }
 }
 
 .option-text {
