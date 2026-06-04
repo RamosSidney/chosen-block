@@ -597,6 +597,7 @@ class BibleQuizGame {
     this.questions = [];  // Array de 20 perguntas selecionadas
     this.currentIndex = 0;
     this.score = 0;
+    this.accumulatedCorrectPoints = 0;
     this.selectedOption = null;
     this.answered = false;
     this.lives = 3;       // Vidas restantes
@@ -617,6 +618,7 @@ class BibleQuizGame {
     this.level = level;
     this.currentIndex = 0;
     this.score = 0;
+    this.accumulatedCorrectPoints = 0;
     this.selectedOption = null;
     this.answered = false;
     this.lives = 3;
@@ -665,6 +667,7 @@ class BibleQuizGame {
       const qDifficulty = currentQuestion.difficulty || this.level;
       rewardGained = COIN_REWARDS[qDifficulty] || 25;
       this.coins += rewardGained;
+      this.accumulatedCorrectPoints += rewardGained;
     } else {
       this.lives--;
     }
@@ -741,11 +744,18 @@ class BibleQuizGame {
     return false;
   }
 
+  getFinalPoints() {
+    const answersPoints = this.accumulatedCorrectPoints;
+    const heartsPoints = Math.max(0, this.lives) * 50;
+    return answersPoints + heartsPoints;
+  }
+
   // Atualiza recorde local para a dificuldade ativa
   updateBestScores() {
     const currentBest = this.bestScores[this.level] || 0;
-    if (this.score > currentBest) {
-      this.bestScores[this.level] = this.score;
+    const finalPoints = this.getFinalPoints();
+    if (finalPoints > currentBest) {
+      this.bestScores[this.level] = finalPoints;
       this.saveBestScores();
       return true; // Novo recorde alcançado!
     }

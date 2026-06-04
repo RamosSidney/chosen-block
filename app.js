@@ -359,10 +359,10 @@ const initApp = () => {
     highTimeEl.textContent = game.bestScores.time[currentGridSize] || 0;
     
     // Atualiza os recordes do Quiz Bíblico no modal
-    document.getElementById('high-quiz-facil').textContent = `${quiz.bestScores.facil || 0} / 20`;
-    document.getElementById('high-quiz-medio').textContent = `${quiz.bestScores.medio || 0} / 20`;
-    document.getElementById('high-quiz-dificil').textContent = `${quiz.bestScores.dificil || 0} / 20`;
-    document.getElementById('high-quiz-misto').textContent = `${quiz.bestScores.misto || 0} / 20`;
+    document.getElementById('high-quiz-facil').textContent = `${quiz.bestScores.facil || 0} pts`;
+    document.getElementById('high-quiz-medio').textContent = `${quiz.bestScores.medio || 0} pts`;
+    document.getElementById('high-quiz-dificil').textContent = `${quiz.bestScores.dificil || 0} pts`;
+    document.getElementById('high-quiz-misto').textContent = `${quiz.bestScores.misto || 0} pts`;
     
     openModal(modalScores);
   });
@@ -382,10 +382,10 @@ const initApp = () => {
       highBombEl.textContent = 0;
       highTimeEl.textContent = 0;
       
-      document.getElementById('high-quiz-facil').textContent = "0 / 20";
-      document.getElementById('high-quiz-medio').textContent = "0 / 20";
-      document.getElementById('high-quiz-dificil').textContent = "0 / 20";
-      document.getElementById('high-quiz-misto').textContent = "0 / 20";
+      document.getElementById('high-quiz-facil').textContent = "0 pts";
+      document.getElementById('high-quiz-medio').textContent = "0 pts";
+      document.getElementById('high-quiz-dificil').textContent = "0 pts";
+      document.getElementById('high-quiz-misto').textContent = "0 pts";
       
       updateScoresUI();
     }
@@ -544,6 +544,7 @@ const initApp = () => {
     const optionButtons = document.querySelectorAll('.btn-option');
     optionButtons.forEach((btn, idx) => {
       btn.className = 'btn-option glass-card'; // Reseta classes
+      btn.blur(); // Remove o foco do botão para não parecer selecionado
       btn.querySelector('.option-text').textContent = q.options[idx];
       btn.dataset.idx = idx;
 
@@ -662,9 +663,9 @@ const initApp = () => {
       misto: 'Misto'
     }[quiz.level];
 
-    const answersPoints = quiz.score * 10;
+    const answersPoints = quiz.accumulatedCorrectPoints;
     const heartsPoints = Math.max(0, quiz.lives) * 50;
-    const finalPoints = answersPoints + heartsPoints;
+    const finalPoints = quiz.getFinalPoints();
 
     // Renderiza a pontuação com destaque e o detalhamento
     document.getElementById('quiz-results-level-label').textContent = levelName;
@@ -710,13 +711,13 @@ const initApp = () => {
     const isNewRecord = quiz.updateBestScores();
     const newRecordBadge = document.getElementById('quiz-new-record-badge');
     
-    if (isNewRecord && quiz.score > prevBest) {
+    if (isNewRecord && finalPoints > prevBest) {
       newRecordBadge.classList.remove('hidden');
     } else {
       newRecordBadge.classList.add('hidden');
     }
 
-    document.getElementById('quiz-best-score').textContent = `${Math.max(prevBest, quiz.score)} / 20`;
+    document.getElementById('quiz-best-score').textContent = `${Math.max(prevBest, finalPoints)} pts`;
 
     // Transição de tela
     transitionScreen(quizScreen, quizResultsScreen);
@@ -812,9 +813,9 @@ const initApp = () => {
       misto: 'Misto'
     }[quiz.level];
 
-    const answersPoints = quiz.score * 10;
+    const answersPoints = quiz.accumulatedCorrectPoints;
     const heartsPoints = Math.max(0, quiz.lives) * 50;
-    const finalPoints = answersPoints + heartsPoints;
+    const finalPoints = quiz.getFinalPoints();
     const heartsEmoji = quiz.lives > 0 ? '❤️'.repeat(quiz.lives) : '💔';
 
     const shareText = `📖 Desafio de Conhecimento Bíblico (Chosen Block) 📖\n\n` +
