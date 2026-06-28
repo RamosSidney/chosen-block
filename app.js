@@ -579,7 +579,7 @@ const initApp = () => {
     const totalQNum = quiz.questions.length;
     const progressPct = (currentQNum / totalQNum) * 100;
     document.getElementById('quiz-progress-bar').style.width = `${progressPct}%`;
-    document.getElementById('quiz-progress-text').textContent = `Pergunta ${currentQNum} de ${totalQNum}`;
+    document.getElementById('quiz-progress-text').textContent = `Pergunta ${currentQNum}`;
 
     // Atualiza acertos
     document.getElementById('quiz-score-indicator').textContent = `Acertos: ${quiz.score}`;
